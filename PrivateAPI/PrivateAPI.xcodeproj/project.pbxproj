@@ -8,6 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		3D05E6111475F507001FAAFA /* PAClassViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3D05E6101475F506001FAAFA /* PAClassViewController.m */; };
+		3D4681B9147AC16D00E9E026 /* PAPropertyTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 3D4681B8147AC16D00E9E026 /* PAPropertyTableViewCell.m */; };
+		3D4681BC147AC18400E9E026 /* PAPropertyTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3D4681BB147AC18400E9E026 /* PAPropertyTableViewCell.xib */; };
+		3D51234F1476ED3100B9152F /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3D51234E1476ED3100B9152F /* MainWindow.xib */; };
+		3D5123511476EF3100B9152F /* PAClassViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3D5123501476EF3000B9152F /* PAClassViewController.xib */; };
 		3D815985147594D700383802 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3D815984147594D700383802 /* UIKit.framework */; };
 		3D815987147594D700383802 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3D815986147594D700383802 /* Foundation.framework */; };
 		3D815989147594D700383802 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3D815988147594D700383802 /* CoreGraphics.framework */; };
@@ -16,12 +20,18 @@
 		3D815995147594D700383802 /* PAAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3D815994147594D700383802 /* PAAppDelegate.m */; };
 		3D815998147594D700383802 /* PAClassesViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3D815997147594D700383802 /* PAClassesViewController.m */; };
 		3D81599B147594D700383802 /* PAClassesViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3D815999147594D700383802 /* PAClassesViewController.xib */; };
-		3D8159A314759F2400383802 /* PAClassTableViewCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3D8159A214759F2400383802 /* PAClassTableViewCell.xib */; };
+		3DBBFB0414794F74003BC9EE /* PAAPI.m in Sources */ = {isa = PBXBuildFile; fileRef = 3DBBFB0314794F74003BC9EE /* PAAPI.m */; };
+		3DCEE261147B5B2800AE0CEA /* PAMethodTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 3DCEE260147B5B2800AE0CEA /* PAMethodTableViewCell.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		3D05E60F1475F506001FAAFA /* PAClassViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PAClassViewController.h; sourceTree = "<group>"; };
 		3D05E6101475F506001FAAFA /* PAClassViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PAClassViewController.m; sourceTree = "<group>"; };
+		3D4681B7147AC16D00E9E026 /* PAPropertyTableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PAPropertyTableViewCell.h; sourceTree = "<group>"; };
+		3D4681B8147AC16D00E9E026 /* PAPropertyTableViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PAPropertyTableViewCell.m; sourceTree = "<group>"; };
+		3D4681BB147AC18400E9E026 /* PAPropertyTableViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PAPropertyTableViewCell.xib; sourceTree = "<group>"; };
+		3D51234E1476ED3100B9152F /* MainWindow.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MainWindow.xib; sourceTree = "<group>"; };
+		3D5123501476EF3000B9152F /* PAClassViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PAClassViewController.xib; sourceTree = "<group>"; };
 		3D815980147594D600383802 /* PrivateAPI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PrivateAPI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3D815984147594D700383802 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		3D815986147594D700383802 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -32,10 +42,13 @@
 		3D815992147594D700383802 /* PrivateAPI-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "PrivateAPI-Prefix.pch"; sourceTree = "<group>"; };
 		3D815993147594D700383802 /* PAAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PAAppDelegate.h; sourceTree = "<group>"; };
 		3D815994147594D700383802 /* PAAppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PAAppDelegate.m; sourceTree = "<group>"; };
-		3D815996147594D700383802 /* PAClassesViewController.h */ = {isa = PBXFileReference; path = PAClassesViewController.h; sourceTree = "<group>"; };
+		3D815996147594D700383802 /* PAClassesViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PAClassesViewController.h; sourceTree = "<group>"; };
 		3D815997147594D700383802 /* PAClassesViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PAClassesViewController.m; sourceTree = "<group>"; };
 		3D81599A147594D700383802 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/PAClassesViewController.xib; sourceTree = "<group>"; };
-		3D8159A214759F2400383802 /* PAClassTableViewCell.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PAClassTableViewCell.xib; sourceTree = "<group>"; };
+		3DBBFB0214794F74003BC9EE /* PAAPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PAAPI.h; sourceTree = "<group>"; };
+		3DBBFB0314794F74003BC9EE /* PAAPI.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PAAPI.m; sourceTree = "<group>"; };
+		3DCEE25F147B5B2800AE0CEA /* PAMethodTableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PAMethodTableViewCell.h; sourceTree = "<group>"; };
+		3DCEE260147B5B2800AE0CEA /* PAMethodTableViewCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PAMethodTableViewCell.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -84,12 +97,20 @@
 			children = (
 				3D815993147594D700383802 /* PAAppDelegate.h */,
 				3D815994147594D700383802 /* PAAppDelegate.m */,
+				3D51234E1476ED3100B9152F /* MainWindow.xib */,
 				3D815996147594D700383802 /* PAClassesViewController.h */,
 				3D815997147594D700383802 /* PAClassesViewController.m */,
 				3D815999147594D700383802 /* PAClassesViewController.xib */,
 				3D05E60F1475F506001FAAFA /* PAClassViewController.h */,
 				3D05E6101475F506001FAAFA /* PAClassViewController.m */,
-				3D8159A214759F2400383802 /* PAClassTableViewCell.xib */,
+				3D5123501476EF3000B9152F /* PAClassViewController.xib */,
+				3D4681B7147AC16D00E9E026 /* PAPropertyTableViewCell.h */,
+				3D4681B8147AC16D00E9E026 /* PAPropertyTableViewCell.m */,
+				3D4681BB147AC18400E9E026 /* PAPropertyTableViewCell.xib */,
+				3DCEE25F147B5B2800AE0CEA /* PAMethodTableViewCell.h */,
+				3DCEE260147B5B2800AE0CEA /* PAMethodTableViewCell.m */,
+				3DBBFB0214794F74003BC9EE /* PAAPI.h */,
+				3DBBFB0314794F74003BC9EE /* PAAPI.m */,
 				3D81598B147594D700383802 /* Supporting Files */,
 			);
 			path = PrivateAPI;
@@ -158,7 +179,9 @@
 			files = (
 				3D81598F147594D700383802 /* InfoPlist.strings in Resources */,
 				3D81599B147594D700383802 /* PAClassesViewController.xib in Resources */,
-				3D8159A314759F2400383802 /* PAClassTableViewCell.xib in Resources */,
+				3D51234F1476ED3100B9152F /* MainWindow.xib in Resources */,
+				3D5123511476EF3100B9152F /* PAClassViewController.xib in Resources */,
+				3D4681BC147AC18400E9E026 /* PAPropertyTableViewCell.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -173,6 +196,9 @@
 				3D815995147594D700383802 /* PAAppDelegate.m in Sources */,
 				3D815998147594D700383802 /* PAClassesViewController.m in Sources */,
 				3D05E6111475F507001FAAFA /* PAClassViewController.m in Sources */,
+				3DBBFB0414794F74003BC9EE /* PAAPI.m in Sources */,
+				3D4681B9147AC16D00E9E026 /* PAPropertyTableViewCell.m in Sources */,
+				3DCEE261147B5B2800AE0CEA /* PAMethodTableViewCell.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

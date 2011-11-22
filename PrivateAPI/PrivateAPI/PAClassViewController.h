@@ -8,6 +8,15 @@
 
 #import <UIKit/UIKit.h>
 
-@interface PAClassViewController : UIViewController
+@class PAPropertyTableViewCell;
+
+@interface PAClassViewController : UIViewController <UISearchBarDelegate, UITableViewDataSource, UITableViewDelegate>
+
+@property(nonatomic, retain) IBOutlet UISearchBar *searchBar;
+@property(nonatomic, retain) IBOutlet UITableView *tableView;
+
+@property(nonatomic, retain) IBOutlet PAPropertyTableViewCell *propertyCell;
+
+@property(nonatomic, copy) NSString *className;
 
 @end
