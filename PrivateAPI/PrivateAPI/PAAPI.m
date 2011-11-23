@@ -11,6 +11,8 @@
 static NSDictionary *classTrees;
 static NSArray      *classList;
 static NSArray      *classHierarchies;
+static NSArray      *propertyList;
+static NSArray      *methodList;
 
 @interface PAAPI ()
 
@@ -38,6 +40,8 @@ static NSArray      *classHierarchies;
         NSMutableDictionary *hierarchies = [NSMutableDictionary dictionary];
         NSMutableDictionary *lookupTable = [NSMutableDictionary dictionaryWithCapacity:count];
         NSMutableDictionary *trees       = [NSMutableDictionary dictionaryWithCapacity:count];
+        NSMutableArray      *properties  = [NSMutableArray array];
+        NSMutableArray      *methods     = [NSMutableArray array];
         
         for(int index = 0; index < count; index++)
         {
@@ -87,6 +91,22 @@ static NSArray      *classHierarchies;
                 [classTree setParents:[NSArray arrayWithObject:superclassTree]];
             }
             else [hierarchies setObject:classHierarchy forKey:className];
+            
+            unsigned int count;
+            
+            objc_property_t *runtimeProperties = class_copyPropertyList(classes[index], &count);
+            
+            for(int subindex = 0; subindex < count; subindex++)
+                [properties addObject:[PAProperty propertyWithRuntimeObject:runtimeProperties[subindex] forOwner:classTree]];
+            
+            free(runtimeProperties);
+            
+            Method *runtimeMethods = class_copyMethodList(classes[index], &count);
+            
+            for(int subindex = 0; subindex < count; subindex++)
+                [methods addObject:[PAMethod methodWithRuntimeObject:runtimeMethods[subindex] forOwner:classTree]];
+            
+            free(runtimeMethods);
         }
         
         [trees enumerateKeysAndObjectsUsingBlock:
@@ -103,6 +123,18 @@ static NSArray      *classHierarchies;
             [rootClasses setDepth:0];
         
         free(classes);
+        
+        propertyList = [properties sortedArrayUsingComparator:
+                        ^NSComparisonResult(id obj1, id obj2)
+                        {
+                            return [[obj1 name] compare:[obj2 name]];
+                        }];
+        
+        methodList = [methods sortedArrayUsingComparator:
+                      ^NSComparisonResult(id obj1, id obj2)
+                      {
+                          return [[obj1 name] compare:[obj2 name]];
+                      }];
     }
 }
 
@@ -114,6 +146,16 @@ static NSArray      *classHierarchies;
 + (NSArray *)classHierarchies
 {
     return classHierarchies;
+}
+
++ (NSArray *)propertyList
+{
+    return propertyList;
+}
+
++ (NSArray *)methodList
+{
+    return methodList;
 }
 
 + (PATree *)classTreeForClassName:(NSString *)className
@@ -146,7 +188,7 @@ static NSArray      *classHierarchies;
     NSMutableArray *properties = [NSMutableArray arrayWithCapacity:count];
     
     for(int index = 0; index < count; index++)
-        [properties addObject:[PAProperty propertyWithRuntimeObject:runtimeObjects[index]]];
+        [properties addObject:[PAProperty propertyWithRuntimeObject:runtimeObjects[index] forOwner:[PAAPI classTreeForClassName:className]]];
     
     free(runtimeObjects);
     
@@ -162,7 +204,7 @@ static NSArray      *classHierarchies;
     NSMutableArray *methods = [NSMutableArray arrayWithCapacity:count];
     
     for(int index = 0; index < count; index++)
-        [methods addObject:[PAMethod methodWithRuntimeObject:runtimeObjects[index]]];
+        [methods addObject:[PAMethod methodWithRuntimeObject:runtimeObjects[index] forOwner:[PAAPI classTreeForClassName:className]]];
     
     free(runtimeObjects);
     
@@ -178,7 +220,7 @@ static NSArray      *classHierarchies;
     NSMutableArray *ivars = [NSMutableArray arrayWithCapacity:count];
     
     for(int index = 0; index < count; index++)
-        [ivars addObject:[PAIvar ivarWithRuntimeObject:runtimeObjects[index]]];
+        [ivars addObject:[PAIvar ivarWithRuntimeObject:runtimeObjects[index] forOwner:[PAAPI classTreeForClassName:className]]];
     
     free(runtimeObjects);
     
@@ -214,12 +256,15 @@ static NSArray      *classHierarchies;
         case ':': return @"SEL";
         case '[':
         {
-            NSScanner *scanner = [NSScanner scannerWithString:[encoding substringWithRange:NSMakeRange(1, [encoding length] - 2)]];
+            encoding = [encoding substringWithRange:NSMakeRange(1, [encoding length] - 2)];
+            
+            NSScanner *scanner = [NSScanner scannerWithString:encoding];
             
             NSInteger length;
             
             [scanner scanInteger:&length];
-            [scanner scanUpToString:nil intoString:&encoding];
+            
+            encoding = [encoding substringFromIndex:[scanner scanLocation]];
             
             return [NSString stringWithFormat:@"%@[%d]", [PAAPI PA_typeForEncoding:encoding], length];
         }
@@ -249,11 +294,14 @@ static NSArray      *classHierarchies;
             return [type stringByAppendingString:[type hasSuffix:@"*"] ? @"*" : @" *"];
         }
         case '?': return @"?";
-        default:
-        {
-            NSAssert(NO, [@"How bizarre da da da da da da da da da da da da...: " stringByAppendingString:encoding]);
-            return nil;
-        }
+        case 'r': return [@"const "  stringByAppendingString:[PAAPI PA_typeForEncoding:[encoding substringFromIndex:1]]];
+        case 'n': return [@"in "     stringByAppendingString:[PAAPI PA_typeForEncoding:[encoding substringFromIndex:1]]];
+        case 'N': return [@"inout "  stringByAppendingString:[PAAPI PA_typeForEncoding:[encoding substringFromIndex:1]]];
+        case 'o': return [@"out "    stringByAppendingString:[PAAPI PA_typeForEncoding:[encoding substringFromIndex:1]]];
+        case 'O': return [@"bycopy " stringByAppendingString:[PAAPI PA_typeForEncoding:[encoding substringFromIndex:1]]];
+        case 'R': return [@"byref "  stringByAppendingString:[PAAPI PA_typeForEncoding:[encoding substringFromIndex:1]]];
+        case 'V': return [@"oneway " stringByAppendingString:[PAAPI PA_typeForEncoding:[encoding substringFromIndex:1]]];
+        default:  return nil;
     }
 }
 
@@ -329,19 +377,20 @@ static NSArray      *classHierarchies;
 
 @implementation PAProperty
 
-@synthesize name, type, readonly, setterSemantics, nonatomic, getter, setter, dynamic, weak, garbageCollected, backingIvar;
+@synthesize name, type, readonly, setterSemantics, nonatomic, getter, setter, dynamic, weak, garbageCollected, backingIvar, owner;
 
-+ (PAProperty *)propertyWithRuntimeObject:(objc_property_t)object
++ (PAProperty *)propertyWithRuntimeObject:(objc_property_t)object forOwner:(PATree *)anOwner
 {
-    return [[PAProperty alloc] initWithRuntimeObject:object];
+    return [[PAProperty alloc] initWithRuntimeObject:object forOwner:anOwner];
 }
 
-- (id)initWithRuntimeObject:(objc_property_t)object
+- (id)initWithRuntimeObject:(objc_property_t)object forOwner:(PATree *)anOwner
 {
     if((self = [super init]) != nil)
     {
         [self setName:[NSString stringWithCString:property_getName(object) encoding:NSASCIIStringEncoding]];
         [self PA_parseAttributes:[NSString stringWithCString:property_getAttributes(object) encoding:NSASCIIStringEncoding]];
+        [self setOwner:anOwner];
     }
     
     return self;
@@ -400,18 +449,12 @@ static NSArray      *classHierarchies;
             }
             case 'P':
             {
-                NSAssert(NO, [@"How bizarre da da da da da da da da da da da da...: " stringByAppendingString:attributes]);
                 [self setGarbageCollected:YES];
                 break;
             }
             case 'V':
             {
                 [self setBackingIvar:[attribute substringFromIndex:1]];
-                break;
-            }
-            default:
-            {
-                NSAssert(NO, [@"How bizarre da da da da da da da da da da da da...: " stringByAppendingString:attributes]);
                 break;
             }
         }
@@ -422,14 +465,14 @@ static NSArray      *classHierarchies;
 
 @implementation PAMethod
 
-@synthesize name, returnType, argumentTypes;
+@synthesize name, returnType, argumentTypes, owner;
 
-+ (PAMethod *)methodWithRuntimeObject:(Method)object
++ (PAMethod *)methodWithRuntimeObject:(Method)object forOwner:(PATree *)anOwner
 {
-    return [[PAMethod alloc] initWithRuntimeObject:object];
+    return [[PAMethod alloc] initWithRuntimeObject:object forOwner:anOwner];
 }
 
-- (id)initWithRuntimeObject:(Method)object
+- (id)initWithRuntimeObject:(Method)object forOwner:(PATree *)anOwner
 {
     if((self = [super init]) != nil)
     {
@@ -455,6 +498,7 @@ static NSArray      *classHierarchies;
         }
         
         [self setArgumentTypes:types];
+        [self setOwner:anOwner];
     }
     
     return self;
@@ -464,20 +508,21 @@ static NSArray      *classHierarchies;
 
 @implementation PAIvar
 
-@synthesize name, type, offset;
+@synthesize name, type, offset, owner;
 
-+ (PAIvar *)ivarWithRuntimeObject:(Ivar)object
++ (PAIvar *)ivarWithRuntimeObject:(Ivar)object forOwner:(PATree *)anOwner
 {
-    return [[PAIvar alloc] initWithRuntimeObject:object];
+    return [[PAIvar alloc] initWithRuntimeObject:object forOwner:anOwner];
 }
 
-- (id)initWithRuntimeObject:(Ivar)object
+- (id)initWithRuntimeObject:(Ivar)object forOwner:(PATree *)anOwner
 {
     if((self = [super init]) != nil)
     {
         [self setName:[NSString stringWithCString:ivar_getName(object) encoding:NSASCIIStringEncoding]];
         [self setType:[PAAPI PA_typeForEncoding:[NSString stringWithCString:ivar_getTypeEncoding(object) encoding:NSASCIIStringEncoding]]];
         [self setOffset:ivar_getOffset(object)];
+        [self setOwner:anOwner];
     }
     
     return self;

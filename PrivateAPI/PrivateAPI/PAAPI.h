@@ -24,6 +24,9 @@ typedef enum
 + (NSArray *)classHierarchies;
 + (PATree  *)classTreeForClassName:(NSString *)className;
 
++ (NSArray *)propertyList;
++ (NSArray *)methodList;
+
 + (NSArray *)protocolNamesForClassName:(NSString *)className;
 + (NSArray *)propertiesForClassName:(NSString *)className;
 + (NSArray *)methodsForClassName:(NSString *)className;
@@ -62,22 +65,24 @@ typedef enum
 @property(nonatomic, assign, getter=isWeak)             BOOL                       weak;
 @property(nonatomic, assign, getter=isGarbageCollected) BOOL                       garbageCollected;
 @property(nonatomic, copy)                              NSString                  *backingIvar;
+@property(nonatomic, retain)                            PATree                    *owner;
 
-+ (PAProperty *)propertyWithRuntimeObject:(objc_property_t)object;
++ (PAProperty *)propertyWithRuntimeObject:(objc_property_t)object forOwner:(PATree *)owner;
 
-- (id)initWithRuntimeObject:(objc_property_t)object;
+- (id)initWithRuntimeObject:(objc_property_t)object forOwner:(PATree *)owner;
 
 @end
 
 @interface PAMethod : NSObject
 
-@property(nonatomic, copy) NSString *name;
-@property(nonatomic, copy) NSString *returnType;
-@property(nonatomic, copy) NSArray  *argumentTypes;
+@property(nonatomic, copy)   NSString *name;
+@property(nonatomic, copy)   NSString *returnType;
+@property(nonatomic, copy)   NSArray  *argumentTypes;
+@property(nonatomic, retain) PATree   *owner;
 
-+ (PAMethod *)methodWithRuntimeObject:(Method)object;
++ (PAMethod *)methodWithRuntimeObject:(Method)object forOwner:(PATree *)owner;
 
-- (id)initWithRuntimeObject:(Method)object;
+- (id)initWithRuntimeObject:(Method)object forOwner:(PATree *)owner;
 
 @end
 
@@ -86,9 +91,10 @@ typedef enum
 @property(nonatomic, copy)   NSString  *name;
 @property(nonatomic, copy)   NSString  *type;
 @property(nonatomic, assign) NSInteger  offset;
+@property(nonatomic, retain) PATree    *owner;
 
-+ (PAIvar *)ivarWithRuntimeObject:(Ivar)object;
++ (PAIvar *)ivarWithRuntimeObject:(Ivar)object forOwner:(PATree *)owner;
 
-- (id)initWithRuntimeObject:(Ivar)object;
+- (id)initWithRuntimeObject:(Ivar)object forOwner:(PATree *)owner;
 
 @end
