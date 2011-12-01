@@ -11,12 +11,22 @@
 static NSDictionary *classTrees;
 static NSArray      *classList;
 static NSArray      *classHierarchies;
+static NSArray      *protocolList;
+static NSDictionary *protocolTrees;
 static NSArray      *propertyList;
 static NSArray      *methodList;
 
 @interface PAAPI ()
 
 + (NSString *)PA_typeForEncoding:(NSString *)encoding;
+
+@end
+
+@interface NSScanner (PrivateAPI)
+
+- (unichar)scanCharacter;
+
+- (BOOL)scanType:(NSString * __autoreleasing *)type;
 
 @end
 
@@ -33,29 +43,21 @@ static NSArray      *methodList;
                                 @"NSMessageBuilder",
                                 nil];
         
-        int count = objc_getClassList(NULL, 0);
-        __unsafe_unretained Class *classes = (__unsafe_unretained Class *)malloc(count * sizeof(Class));
-        objc_getClassList(classes, count);
+        int classCount = objc_getClassList(NULL, 0);
+        __unsafe_unretained Class *classes = (__unsafe_unretained Class *)malloc(classCount * sizeof(Class));
+        objc_getClassList(classes, classCount);
         
         NSMutableDictionary *hierarchies = [NSMutableDictionary dictionary];
-        NSMutableDictionary *lookupTable = [NSMutableDictionary dictionaryWithCapacity:count];
-        NSMutableDictionary *trees       = [NSMutableDictionary dictionaryWithCapacity:count];
+        NSMutableDictionary *lookupTable = [NSMutableDictionary dictionaryWithCapacity:classCount];
+        NSMutableDictionary *trees       = [NSMutableDictionary dictionaryWithCapacity:classCount];
         NSMutableArray      *properties  = [NSMutableArray array];
         NSMutableArray      *methods     = [NSMutableArray array];
         
-        for(int index = 0; index < count; index++)
+        for(int index = 0; index < classCount; index++)
         {
             NSString *className = NSStringFromClass(classes[index]);
             
             if([badClassNames containsObject:className]) continue;
-            
-            NSMutableDictionary *classHierarchy = [lookupTable objectForKey:className];
-            
-            if(classHierarchy == nil)
-            {
-                classHierarchy = [NSMutableDictionary dictionary];
-                [lookupTable setObject:classHierarchy forKey:className];
-            }
             
             PATree *classTree = [trees objectForKey:className];
             
@@ -65,11 +67,29 @@ static NSArray      *methodList;
                 [trees setObject:classTree forKey:className];
             }
             
+            NSMutableDictionary *classHierarchy = [lookupTable objectForKey:className];
+            
+            if(classHierarchy == nil)
+            {
+                classHierarchy = [NSMutableDictionary dictionary];
+                [lookupTable setObject:classHierarchy forKey:className];
+            }
+            
             Class superclass = [classes[index] superclass];
             
             if(superclass != Nil)
             {
-                NSString            *superclassName      = NSStringFromClass(superclass);
+                NSString *superclassName = NSStringFromClass(superclass);
+                PATree   *superclassTree = [trees objectForKey:superclassName];
+                
+                if(superclassTree == nil)
+                {
+                    superclassTree = [PATree treeWithName:superclassName];
+                    [trees setObject:superclassTree forKey:superclassName];
+                }
+                
+                [classTree setParents:[NSArray arrayWithObject:superclassTree]];
+                
                 NSMutableDictionary *superclassHierarchy = [lookupTable objectForKey:superclassName];
                 
                 if(superclassHierarchy == nil)
@@ -79,16 +99,6 @@ static NSArray      *methodList;
                 }
                 
                 [superclassHierarchy setObject:classHierarchy forKey:className];
-                
-                PATree *superclassTree = [trees objectForKey:superclassName];
-                
-                if(superclassTree == nil)
-                {
-                    superclassTree = [PATree treeWithName:superclassName];
-                    [trees setObject:superclassTree forKey:superclassName];
-                }
-                
-                [classTree setParents:[NSArray arrayWithObject:superclassTree]];
             }
             else [hierarchies setObject:classHierarchy forKey:className];
             
@@ -124,6 +134,73 @@ static NSArray      *methodList;
         
         free(classes);
         
+        unsigned int protocolCount;
+        
+        Protocol * __unsafe_unretained *protocols = objc_copyProtocolList(&protocolCount);
+        
+        trees       = [NSMutableDictionary dictionaryWithCapacity:protocolCount];
+        lookupTable = [NSMutableDictionary dictionaryWithCapacity:protocolCount];
+        
+        for(int index = 0; index < protocolCount; index++)
+        {
+            NSString *protocolName = NSStringFromProtocol(protocols[index]);
+            PATree   *protocolTree = [trees objectForKey:protocolName];
+            
+            if(protocolTree == nil)
+            {
+                protocolTree = [PATree treeWithName:protocolName];
+                [trees setObject:protocolTree forKey:protocolName];
+            }
+            
+            unsigned int parentCount;
+            
+            Protocol * __unsafe_unretained *parentProtocols = protocol_copyProtocolList(protocols[index], &parentCount);
+            
+            NSMutableArray *parents = [NSMutableArray arrayWithCapacity:parentCount];
+            
+            for(int subindex = 0; subindex < parentCount; subindex++)
+            {
+                NSString *parentName = NSStringFromProtocol(parentProtocols[subindex]);
+                PATree   *parentTree = [trees objectForKey:parentName];
+                
+                if(parentTree == nil)
+                {
+                    parentTree = [PATree treeWithName:parentName];
+                    [trees setObject:parentTree forKey:parentName];
+                }
+                
+                [parents addObject:parentTree];
+                
+                NSMutableDictionary *children = [lookupTable objectForKey:parentName];
+                
+                if(children == nil)
+                {
+                    children = [NSMutableDictionary dictionaryWithCapacity:1];
+                    [lookupTable setObject:children forKey:parentName];
+                }
+                
+                [children setObject:protocolTree forKey:protocolName];
+            }
+            
+            [protocolTree setParents:[parents sortedArrayUsingComparator:
+                                      ^NSComparisonResult(id obj1, id obj2)
+                                      {
+                                          return [[obj1 name] compare:[obj2 name]];
+                                      }]];
+        }
+        
+        for(PATree *protocolTree in [trees allValues])
+        {
+            NSMutableDictionary *children = [lookupTable objectForKey:[protocolTree name]];
+            
+            [protocolTree setChildren:[children objectsForKeys:[[children allKeys] sortedArrayUsingSelector:@selector(compare:)] notFoundMarker:[PATree tree]]];
+        }
+        
+        protocolTrees = trees;
+        protocolList  = [trees objectsForKeys:[[trees allKeys] sortedArrayUsingSelector:@selector(compare:)] notFoundMarker:[PATree tree]];
+        
+        free(protocols);
+        
         propertyList = [properties sortedArrayUsingComparator:
                         ^NSComparisonResult(id obj1, id obj2)
                         {
@@ -148,6 +225,11 @@ static NSArray      *methodList;
     return classHierarchies;
 }
 
++ (NSArray *)protocolList
+{
+    return protocolList;
+}
+
 + (NSArray *)propertyList
 {
     return propertyList;
@@ -161,6 +243,11 @@ static NSArray      *methodList;
 + (PATree *)classTreeForClassName:(NSString *)className
 {
     return [classTrees objectForKey:className];
+}
+
++ (PATree *)protocolTreeForProtocolName:(NSString *)protocolName
+{
+    return [protocolTrees objectForKey:protocolName];
 }
 
 + (NSArray *)protocolNamesForClassName:(NSString *)className
@@ -211,6 +298,56 @@ static NSArray      *methodList;
     return methods;
 }
 
++ (NSArray *)propertiesForProtocolName:(NSString *)protocolName
+{
+    unsigned int count;
+    
+    objc_property_t *runtimeObjects = protocol_copyPropertyList(NSProtocolFromString(protocolName), &count);
+    
+    NSMutableArray *properties = [NSMutableArray arrayWithCapacity:count];
+    
+    for(int index = 0; index < count; index++)
+        [properties addObject:[PAProperty propertyWithRuntimeObject:runtimeObjects[index] forOwner:[PAAPI protocolTreeForProtocolName:protocolName]]];
+    
+    free(runtimeObjects);
+    
+    return properties;
+}
+
++ (NSArray *)methodsForProtocolName:(NSString *)protocolName
+{
+    PATree         *protocolTree = [PAAPI protocolTreeForProtocolName:protocolName];
+    Protocol       *protocol     = NSProtocolFromString(protocolName);
+    NSMutableArray *methods      = [NSMutableArray array];
+    
+    void (^copy)(BOOL, BOOL) =
+    ^(BOOL isRequiredMethod, BOOL isInstanceMethod)
+    {
+        unsigned int count;
+        
+        struct objc_method_description *descriptions = protocol_copyMethodDescriptionList(protocol, isRequiredMethod, isInstanceMethod, &count);
+        
+        for(int index = 0; index < count; index++)
+        {
+            PAMethod *method = [PAMethod methodWithDescription:descriptions + index forOwner:protocolTree];
+            
+            [method setRequiredMethod:isRequiredMethod];
+            [method setInstanceMethod:isInstanceMethod];
+            
+            [methods addObject:method];
+        }
+        
+        free(descriptions);
+    };
+    
+    copy(YES, NO);
+    copy(NO,  NO);
+    copy(YES, YES);
+    copy(NO,  YES);
+    
+    return methods;
+}
+
 + (NSArray *)ivarsForClassName:(NSString *)className
 {
     unsigned int count;
@@ -229,80 +366,13 @@ static NSArray      *methodList;
 
 + (NSString *)PA_typeForEncoding:(NSString *)encoding
 {
-    switch([encoding characterAtIndex:0])
-    {
-        case 'B': return @"bool";
-        case 'C': return @"unsigned char";
-        case 'c': return @"char";
-        case 'd': return @"double";
-        case 'f': return @"float";
-        case 'I': return @"unsigned int";
-        case 'i': return @"int";
-        case 'L': return @"unsigned long";
-        case 'l': return @"long";
-        case 'Q': return @"unsigned long long";
-        case 'q': return @"long long";
-        case 'S': return @"unsigned short";
-        case 's': return @"short";
-        case 'v': return @"void";
-        case '*': return @"char *";
-        case '@':
-        {
-            NSInteger length = [encoding length];
-            
-            return length < 3 ? @"id" : [[encoding substringWithRange:NSMakeRange(2, length - 3)] stringByAppendingString:@" *"];
-        }
-        case '#': return @"Class";
-        case ':': return @"SEL";
-        case '[':
-        {
-            encoding = [encoding substringWithRange:NSMakeRange(1, [encoding length] - 2)];
-            
-            NSScanner *scanner = [NSScanner scannerWithString:encoding];
-            
-            NSInteger length;
-            
-            [scanner scanInteger:&length];
-            
-            encoding = [encoding substringFromIndex:[scanner scanLocation]];
-            
-            return [NSString stringWithFormat:@"%@[%d]", [PAAPI PA_typeForEncoding:encoding], length];
-        }
-        case '{':
-        case '(':
-        {
-            NSScanner *scanner = [NSScanner scannerWithString:[encoding substringWithRange:NSMakeRange(1, [encoding length] - 2)]];
-            
-            NSString *name;
-            
-            [scanner scanUpToString:@"=" intoString:&name];
-        }
-        case 'b':
-        {
-            NSScanner *scanner = [NSScanner scannerWithString:[encoding substringFromIndex:1]];
-            
-            NSInteger bits;
-            
-            [scanner scanInteger:&bits];
-            
-            return [@"int" stringByAppendingFormat:@"%d", bits];
-        }
-        case '^':
-        {
-            NSString *type = [PAAPI PA_typeForEncoding:[encoding substringFromIndex:1]];
-            
-            return [type stringByAppendingString:[type hasSuffix:@"*"] ? @"*" : @" *"];
-        }
-        case '?': return @"?";
-        case 'r': return [@"const "  stringByAppendingString:[PAAPI PA_typeForEncoding:[encoding substringFromIndex:1]]];
-        case 'n': return [@"in "     stringByAppendingString:[PAAPI PA_typeForEncoding:[encoding substringFromIndex:1]]];
-        case 'N': return [@"inout "  stringByAppendingString:[PAAPI PA_typeForEncoding:[encoding substringFromIndex:1]]];
-        case 'o': return [@"out "    stringByAppendingString:[PAAPI PA_typeForEncoding:[encoding substringFromIndex:1]]];
-        case 'O': return [@"bycopy " stringByAppendingString:[PAAPI PA_typeForEncoding:[encoding substringFromIndex:1]]];
-        case 'R': return [@"byref "  stringByAppendingString:[PAAPI PA_typeForEncoding:[encoding substringFromIndex:1]]];
-        case 'V': return [@"oneway " stringByAppendingString:[PAAPI PA_typeForEncoding:[encoding substringFromIndex:1]]];
-        default:  return nil;
-    }
+    NSString *type;
+    
+    NSScanner *scanner = [NSScanner scannerWithString:encoding];
+    
+    [scanner scanType:&type];
+    
+    return type;
 }
 
 @end
@@ -388,8 +458,8 @@ static NSArray      *methodList;
 {
     if((self = [super init]) != nil)
     {
-        [self setName:[NSString stringWithCString:property_getName(object) encoding:NSASCIIStringEncoding]];
-        [self PA_parseAttributes:[NSString stringWithCString:property_getAttributes(object) encoding:NSASCIIStringEncoding]];
+        [self setName:[NSString stringWithUTF8String:property_getName(object)]];
+        [self PA_parseAttributes:[NSString stringWithUTF8String:property_getAttributes(object)]];
         [self setOwner:anOwner];
     }
     
@@ -465,22 +535,27 @@ static NSArray      *methodList;
 
 @implementation PAMethod
 
-@synthesize name, returnType, argumentTypes, owner;
+@synthesize name, returnType, argumentTypes, requiredMethod, instanceMethod, owner;
 
 + (PAMethod *)methodWithRuntimeObject:(Method)object forOwner:(PATree *)anOwner
 {
     return [[PAMethod alloc] initWithRuntimeObject:object forOwner:anOwner];
 }
 
++ (PAMethod *)methodWithDescription:(struct objc_method_description *)description forOwner:(PATree *)owner
+{
+    return [[PAMethod alloc] initWithDescription:description forOwner:owner];
+}
+
 - (id)initWithRuntimeObject:(Method)object forOwner:(PATree *)anOwner
 {
     if((self = [super init]) != nil)
     {
-        [self setName:[NSString stringWithCString:sel_getName(method_getName(object)) encoding:NSASCIIStringEncoding]];
+        [self setName:[NSString stringWithUTF8String:sel_getName(method_getName(object))]];
         
         char *type = method_copyReturnType(object);
         
-        [self setReturnType:[PAAPI PA_typeForEncoding:[NSString stringWithCString:type encoding:NSASCIIStringEncoding]]];
+        [self setReturnType:[PAAPI PA_typeForEncoding:[NSString stringWithUTF8String:type]]];
         
         free(type);
         
@@ -492,13 +567,45 @@ static NSArray      *methodList;
         {
             type = method_copyArgumentType(object, 2 + index);
             
-            [types addObject:[PAAPI PA_typeForEncoding:[NSString stringWithCString:type encoding:NSASCIIStringEncoding]]];
+            [types addObject:[PAAPI PA_typeForEncoding:[NSString stringWithUTF8String:type]]];
             
             free(type);
         }
         
         [self setArgumentTypes:types];
         [self setOwner:anOwner];
+    }
+    
+    return self;
+}
+
+- (id)initWithDescription:(struct objc_method_description *)description forOwner:(PATree *)owner
+{
+    if((self = [super init]) != nil)
+    {
+        [self setName:NSStringFromSelector(description->name)];
+        
+        NSScanner *scanner = [NSScanner scannerWithString:[NSString stringWithUTF8String:description->types]];
+        
+        NSString *type;
+        
+        [scanner scanType:&type];
+        [self setReturnType:type];
+        [scanner scanInteger:NULL];
+        [scanner scanType:NULL];
+        [scanner scanInteger:NULL];
+        [scanner scanType:NULL];
+        [scanner scanInteger:NULL];
+        
+        NSMutableArray *types = [NSMutableArray array];
+        
+        while([scanner scanType:&type])
+        {
+            [types addObject:type];
+            [scanner scanInteger:NULL];
+        }
+        
+        [self setArgumentTypes:types];
     }
     
     return self;
@@ -519,13 +626,240 @@ static NSArray      *methodList;
 {
     if((self = [super init]) != nil)
     {
-        [self setName:[NSString stringWithCString:ivar_getName(object) encoding:NSASCIIStringEncoding]];
-        [self setType:[PAAPI PA_typeForEncoding:[NSString stringWithCString:ivar_getTypeEncoding(object) encoding:NSASCIIStringEncoding]]];
+        [self setName:[NSString stringWithUTF8String:ivar_getName(object)]];
+        [self setType:[PAAPI PA_typeForEncoding:[NSString stringWithUTF8String:ivar_getTypeEncoding(object)]]];
         [self setOffset:ivar_getOffset(object)];
         [self setOwner:anOwner];
     }
     
     return self;
+}
+
+@end
+
+@implementation NSScanner (PrivateAPI)
+
+- (unichar)scanCharacter
+{
+    if([self scanLocation] < [[self string] length])
+    {
+        unichar character = [[self string] characterAtIndex:[self scanLocation]];
+        
+        [self setScanLocation:[self scanLocation] + 1];
+        
+        return character;
+    }
+    else return '\0';
+}
+
+- (BOOL)scanType:(NSString * __autoreleasing *)type
+{
+    if(type == NULL) type = &(__autoreleasing NSString *){ nil };
+    
+    NSUInteger startingLocation = [self scanLocation];
+    
+    BOOL (^failure)() =
+    ^ BOOL
+    {
+        [self setScanLocation:startingLocation];
+        
+        return NO;
+    };
+    
+    BOOL (^primitive)(NSString *) =
+    ^ BOOL (NSString *name)
+    {
+        *type = name;
+        
+        return YES;
+    };
+    
+    BOOL (^modifier)(NSString *) =
+    ^ BOOL (NSString *name)
+    {
+        NSString *subtype;
+        
+        if(![self scanType:&subtype]) return failure();
+        
+        *type = [name stringByAppendingString:subtype];
+        
+        return YES;
+    };
+    
+    switch([self scanCharacter])
+    {
+        case 'B': return primitive(@"bool");
+        case 'C': return primitive(@"unsigned char");
+        case 'c': return primitive(@"BOOL");
+        case 'D': return primitive(@"long double");
+        case 'd': return primitive(@"double");
+        case 'f': return primitive(@"float");
+        case 'I': return primitive(@"unsigned int");
+        case 'i': return primitive(@"int");
+        case 'j': return modifier(@"_Complex ");
+        case 'L': return primitive(@"unsigned long");
+        case 'l': return primitive(@"long");
+        case 'Q': return primitive(@"unsigned long long");
+        case 'q': return primitive(@"long long");
+        case 'S': return primitive(@"unsigned short");
+        case 's': return primitive(@"short");
+        case 'v': return primitive(@"void");
+        case '*': return primitive(@"char *");
+        case '@':
+        {
+            switch([self scanCharacter])
+            {
+                case '"':
+                {
+                    BOOL isProtocol = [self scanString:@"<" intoString:NULL];
+                    
+                    NSString *subtype;
+                    
+                    [self scanUpToString:isProtocol ? @">\"" : @"\"" intoString:&subtype];
+                    
+                    if(![self scanString:isProtocol ? @">\"" : @"\"" intoString:NULL]) return failure();
+                    
+                    *type = isProtocol ? [NSString stringWithFormat:@"id<%@>", subtype] : [subtype stringByAppendingString:@" *"];
+                    
+                    break;
+                }
+                case '?':
+                {
+                    *type = @"block";
+                    
+                    break;
+                }
+                case '\0':
+                {
+                    *type = @"id";
+                    
+                    break;
+                }
+                default:
+                {
+                    [self setScanLocation:[self scanLocation] - 1];
+                    
+                    *type = @"id";
+                    
+                    break;
+                }
+            }
+            
+            return YES;
+        }
+        case '#': return primitive(@"Class");
+        case ':': return primitive(@"SEL");
+        case '[':
+        {
+            NSInteger  length;
+            NSString  *subtype;
+            
+            if(![self scanInteger:&length] || ![self scanType:&subtype] || ![self scanString:@"]" intoString:NULL]) return failure();
+            
+            *type = [NSString stringWithFormat:@"%@[%d]", subtype, length];
+            
+            return YES;
+        }
+        case '{':
+        {
+            NSString *name;
+            unichar   character;
+            
+            [self scanUpToCharactersFromSet:[NSCharacterSet characterSetWithCharactersInString:@"=}"] intoString:&name];
+            [self scanString:@"=" intoString:NULL];
+            
+            while((character = [self scanCharacter]) != '}')
+            {
+                if(character == '\0') return failure();
+                
+                if(character == '"')
+                {
+                    [self scanUpToString:@"\"" intoString:NULL];
+                    
+                    if(![self scanString:@"\"" intoString:NULL]) return failure();
+                }
+                else [self setScanLocation:[self scanLocation] - 1];
+                
+                if(![self scanType:NULL]) return failure();
+            }
+            
+            *type = [@"struct " stringByAppendingString:name];
+            
+            return YES;
+        }
+        case '(':
+        {
+            NSString *name;
+            unichar   character;
+            
+            [self scanUpToCharactersFromSet:[NSCharacterSet characterSetWithCharactersInString:@"=)"] intoString:&name];
+            [self scanString:@"=" intoString:NULL];
+            
+            while((character = [self scanCharacter]) != ')')
+            {
+                if(character == '\0') return failure();
+                
+                if(character == '"')
+                {
+                    [self scanUpToString:@"\"" intoString:NULL];
+                    
+                    if(![self scanString:@"\"" intoString:NULL]) return failure();
+                }
+                else [self setScanLocation:[self scanLocation] - 1];
+                
+                if(![self scanType:NULL]) return failure();
+            }
+            
+            *type = [@"union " stringByAppendingString:name];
+            
+            return YES;
+        }
+        case 'b':
+        {
+            NSInteger bits;
+            
+            if(![self scanInteger:&bits]) return failure();
+            
+            *type = [NSString stringWithFormat:@"int%d", bits];
+            
+            return YES;
+        }
+        case '^':
+        {
+            switch([self scanCharacter])
+            {
+                case '?':
+                {
+                    *type = @"function";
+                    
+                    break;
+                }
+                default:
+                {
+                    [self setScanLocation:[self scanLocation] - 1];
+                    
+                    NSString *subtype;
+                    
+                    if(![self scanType:&subtype]) return failure();
+                    
+                    *type = [subtype stringByAppendingString:[subtype hasSuffix:@"*"] ? @"*" : @" *"];
+                    
+                    break;
+                }
+            }
+            
+            return YES;
+        }
+        case '?': return primitive(@"?");
+        case 'r': return modifier(@"const ");
+        case 'n': return modifier(@"in ");
+        case 'N': return modifier(@"inout ");
+        case 'o': return modifier(@"out ");
+        case 'O': return modifier(@"bycopy ");
+        case 'R': return modifier(@"byref ");
+        case 'V': return modifier(@"oneway ");
+        default:  return failure();
+    }
 }
 
 @end

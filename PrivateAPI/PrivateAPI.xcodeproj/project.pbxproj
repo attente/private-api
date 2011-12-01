@@ -14,6 +14,11 @@
 		3D469334147CC71C00B8AFD2 /* PAMethodsViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3D469333147CC71C00B8AFD2 /* PAMethodsViewController.xib */; };
 		3D51234F1476ED3100B9152F /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3D51234E1476ED3100B9152F /* MainWindow.xib */; };
 		3D5123511476EF3100B9152F /* PAClassViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3D5123501476EF3000B9152F /* PAClassViewController.xib */; };
+		3D5A58071488113100ED7307 /* SenTestingKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3D5A58061488113100ED7307 /* SenTestingKit.framework */; };
+		3D5A58081488113100ED7307 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3D815984147594D700383802 /* UIKit.framework */; };
+		3D5A58091488113100ED7307 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3D815986147594D700383802 /* Foundation.framework */; };
+		3D5A580F1488113100ED7307 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 3D5A580D1488113100ED7307 /* InfoPlist.strings */; };
+		3D5A58121488113100ED7307 /* PrivateAPITest.m in Sources */ = {isa = PBXBuildFile; fileRef = 3D5A58111488113100ED7307 /* PrivateAPITest.m */; };
 		3D815985147594D700383802 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3D815984147594D700383802 /* UIKit.framework */; };
 		3D815987147594D700383802 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3D815986147594D700383802 /* Foundation.framework */; };
 		3D815989147594D700383802 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3D815988147594D700383802 /* CoreGraphics.framework */; };
@@ -22,6 +27,8 @@
 		3D815995147594D700383802 /* PAAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3D815994147594D700383802 /* PAAppDelegate.m */; };
 		3D815998147594D700383802 /* PAClassesViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3D815997147594D700383802 /* PAClassesViewController.m */; };
 		3D81599B147594D700383802 /* PAClassesViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3D815999147594D700383802 /* PAClassesViewController.xib */; };
+		3D99BD531481912D0044E29B /* PAProtocolViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3D99BD521481912D0044E29B /* PAProtocolViewController.m */; };
+		3D99BD56148191B80044E29B /* PAProtocolViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3D99BD55148191B80044E29B /* PAProtocolViewController.xib */; };
 		3DBBFB0414794F74003BC9EE /* PAAPI.m in Sources */ = {isa = PBXBuildFile; fileRef = 3DBBFB0314794F74003BC9EE /* PAAPI.m */; };
 		3DCEE261147B5B2800AE0CEA /* PAMethodTableViewCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 3DCEE260147B5B2800AE0CEA /* PAMethodTableViewCell.m */; };
 /* End PBXBuildFile section */
@@ -37,6 +44,13 @@
 		3D469333147CC71C00B8AFD2 /* PAMethodsViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PAMethodsViewController.xib; sourceTree = "<group>"; };
 		3D51234E1476ED3100B9152F /* MainWindow.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MainWindow.xib; sourceTree = "<group>"; };
 		3D5123501476EF3000B9152F /* PAClassViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PAClassViewController.xib; sourceTree = "<group>"; };
+		3D5A58051488113100ED7307 /* PrivateAPITest.octest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PrivateAPITest.octest; sourceTree = BUILT_PRODUCTS_DIR; };
+		3D5A58061488113100ED7307 /* SenTestingKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SenTestingKit.framework; path = Library/Frameworks/SenTestingKit.framework; sourceTree = DEVELOPER_DIR; };
+		3D5A580C1488113100ED7307 /* PrivateAPITest-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "PrivateAPITest-Info.plist"; sourceTree = "<group>"; };
+		3D5A580E1488113100ED7307 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		3D5A58101488113100ED7307 /* PrivateAPITest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PrivateAPITest.h; sourceTree = "<group>"; };
+		3D5A58111488113100ED7307 /* PrivateAPITest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PrivateAPITest.m; sourceTree = "<group>"; };
+		3D5A58131488113100ED7307 /* PrivateAPITest-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "PrivateAPITest-Prefix.pch"; sourceTree = "<group>"; };
 		3D815980147594D600383802 /* PrivateAPI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PrivateAPI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3D815984147594D700383802 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		3D815986147594D700383802 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -50,6 +64,9 @@
 		3D815996147594D700383802 /* PAClassesViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PAClassesViewController.h; sourceTree = "<group>"; };
 		3D815997147594D700383802 /* PAClassesViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PAClassesViewController.m; sourceTree = "<group>"; };
 		3D81599A147594D700383802 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/PAClassesViewController.xib; sourceTree = "<group>"; };
+		3D99BD511481912D0044E29B /* PAProtocolViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PAProtocolViewController.h; sourceTree = "<group>"; };
+		3D99BD521481912D0044E29B /* PAProtocolViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PAProtocolViewController.m; sourceTree = "<group>"; };
+		3D99BD55148191B80044E29B /* PAProtocolViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PAProtocolViewController.xib; sourceTree = "<group>"; };
 		3DBBFB0214794F74003BC9EE /* PAAPI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PAAPI.h; sourceTree = "<group>"; };
 		3DBBFB0314794F74003BC9EE /* PAAPI.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PAAPI.m; sourceTree = "<group>"; };
 		3DCEE25F147B5B2800AE0CEA /* PAMethodTableViewCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PAMethodTableViewCell.h; sourceTree = "<group>"; };
@@ -57,6 +74,16 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		3D5A58011488113100ED7307 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3D5A58071488113100ED7307 /* SenTestingKit.framework in Frameworks */,
+				3D5A58081488113100ED7307 /* UIKit.framework in Frameworks */,
+				3D5A58091488113100ED7307 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		3D81597D147594D600383802 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -70,10 +97,31 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		3D5A580A1488113100ED7307 /* PrivateAPITest */ = {
+			isa = PBXGroup;
+			children = (
+				3D5A58101488113100ED7307 /* PrivateAPITest.h */,
+				3D5A58111488113100ED7307 /* PrivateAPITest.m */,
+				3D5A580B1488113100ED7307 /* Supporting Files */,
+			);
+			path = PrivateAPITest;
+			sourceTree = "<group>";
+		};
+		3D5A580B1488113100ED7307 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				3D5A580C1488113100ED7307 /* PrivateAPITest-Info.plist */,
+				3D5A580D1488113100ED7307 /* InfoPlist.strings */,
+				3D5A58131488113100ED7307 /* PrivateAPITest-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
 		3D815975147594D600383802 = {
 			isa = PBXGroup;
 			children = (
 				3D81598A147594D700383802 /* PrivateAPI */,
+				3D5A580A1488113100ED7307 /* PrivateAPITest */,
 				3D815983147594D700383802 /* Frameworks */,
 				3D815981147594D600383802 /* Products */,
 			);
@@ -83,6 +131,7 @@
 			isa = PBXGroup;
 			children = (
 				3D815980147594D600383802 /* PrivateAPI.app */,
+				3D5A58051488113100ED7307 /* PrivateAPITest.octest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -93,6 +142,7 @@
 				3D815984147594D700383802 /* UIKit.framework */,
 				3D815986147594D700383802 /* Foundation.framework */,
 				3D815988147594D700383802 /* CoreGraphics.framework */,
+				3D5A58061488113100ED7307 /* SenTestingKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -112,6 +162,9 @@
 				3D05E60F1475F506001FAAFA /* PAClassViewController.h */,
 				3D05E6101475F506001FAAFA /* PAClassViewController.m */,
 				3D5123501476EF3000B9152F /* PAClassViewController.xib */,
+				3D99BD511481912D0044E29B /* PAProtocolViewController.h */,
+				3D99BD521481912D0044E29B /* PAProtocolViewController.m */,
+				3D99BD55148191B80044E29B /* PAProtocolViewController.xib */,
 				3D4681B7147AC16D00E9E026 /* PAPropertyTableViewCell.h */,
 				3D4681B8147AC16D00E9E026 /* PAPropertyTableViewCell.m */,
 				3D4681BB147AC18400E9E026 /* PAPropertyTableViewCell.xib */,
@@ -138,6 +191,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		3D5A58041488113100ED7307 /* PrivateAPITest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3D5A58161488113100ED7307 /* Build configuration list for PBXNativeTarget "PrivateAPITest" */;
+			buildPhases = (
+				3D5A58001488113100ED7307 /* Sources */,
+				3D5A58011488113100ED7307 /* Frameworks */,
+				3D5A58021488113100ED7307 /* Resources */,
+				3D5A58031488113100ED7307 /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PrivateAPITest;
+			productName = PrivateAPITest;
+			productReference = 3D5A58051488113100ED7307 /* PrivateAPITest.octest */;
+			productType = "com.apple.product-type.bundle";
+		};
 		3D81597F147594D600383802 /* PrivateAPI */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 3D81599E147594D700383802 /* Build configuration list for PBXNativeTarget "PrivateAPI" */;
@@ -176,11 +247,20 @@
 			projectRoot = "";
 			targets = (
 				3D81597F147594D600383802 /* PrivateAPI */,
+				3D5A58041488113100ED7307 /* PrivateAPITest */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		3D5A58021488113100ED7307 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3D5A580F1488113100ED7307 /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		3D81597E147594D600383802 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -191,12 +271,37 @@
 				3D5123511476EF3100B9152F /* PAClassViewController.xib in Resources */,
 				3D4681BC147AC18400E9E026 /* PAPropertyTableViewCell.xib in Resources */,
 				3D469334147CC71C00B8AFD2 /* PAMethodsViewController.xib in Resources */,
+				3D99BD56148191B80044E29B /* PAProtocolViewController.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		3D5A58031488113100ED7307 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Run the unit tests in this test bundle.\n\"${SYSTEM_DEVELOPER_DIR}/Tools/RunUnitTests\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
+		3D5A58001488113100ED7307 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3D5A58121488113100ED7307 /* PrivateAPITest.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		3D81597C147594D600383802 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -209,12 +314,21 @@
 				3D4681B9147AC16D00E9E026 /* PAPropertyTableViewCell.m in Sources */,
 				3DCEE261147B5B2800AE0CEA /* PAMethodTableViewCell.m in Sources */,
 				3D469331147CC6E800B8AFD2 /* PAMethodsViewController.m in Sources */,
+				3D99BD531481912D0044E29B /* PAProtocolViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
+		3D5A580D1488113100ED7307 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				3D5A580E1488113100ED7307 /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
 		3D81598D147594D700383802 /* InfoPlist.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -234,6 +348,36 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		3D5A58141488113100ED7307 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(DEVELOPER_LIBRARY_DIR)/Frameworks",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "PrivateAPITest/PrivateAPITest-Prefix.pch";
+				INFOPLIST_FILE = "PrivateAPITest/PrivateAPITest-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = octest;
+			};
+			name = Debug;
+		};
+		3D5A58151488113100ED7307 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(DEVELOPER_LIBRARY_DIR)/Frameworks",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "PrivateAPITest/PrivateAPITest-Prefix.pch";
+				INFOPLIST_FILE = "PrivateAPITest/PrivateAPITest-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = octest;
+			};
+			name = Release;
+		};
 		3D81599C147594D700383802 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -304,6 +448,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		3D5A58161488113100ED7307 /* Build configuration list for PBXNativeTarget "PrivateAPITest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3D5A58141488113100ED7307 /* Debug */,
+				3D5A58151488113100ED7307 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		3D81597A147594D600383802 /* Build configuration list for PBXProject "PrivateAPI" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

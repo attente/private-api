@@ -8,6 +8,7 @@
 
 #import "PAClassesViewController.h"
 #import "PAClassViewController.h"
+#import "PAProtocolViewController.h"
 #import "PAAPI.h"
 
 enum PAClassesViewControllerMode
@@ -20,6 +21,7 @@ enum PAClassesViewControllerMode
 @interface PAClassesViewController ()
 
 @property(nonatomic, copy) NSArray *visibleClasses;
+@property(nonatomic, copy) NSArray *visibleProtocols;
 
 #pragma mark - Keyboard notifications
 
@@ -29,7 +31,7 @@ enum PAClassesViewControllerMode
 
 @implementation PAClassesViewController
 
-@synthesize searchBar, tableView, toolbar, modeControl, tapRecognizer, visibleClasses;
+@synthesize searchBar, tableView, toolbar, modeControl, tapRecognizer, visibleClasses, visibleProtocols;
 
 - (void)didReceiveMemoryWarning
 {
@@ -98,7 +100,8 @@ enum PAClassesViewControllerMode
                 }
                 else
                 {
-                    BOOL (^test)(PATree *) = ^BOOL(PATree *tree)
+                    BOOL (^test)(PATree *) =
+                    ^ BOOL (PATree *tree)
                     {
                         return [[tree name] rangeOfString:[searchBar text] options:NSCaseInsensitiveSearch | NSDiacriticInsensitiveSearch].location != NSNotFound;
                     };
@@ -128,9 +131,23 @@ enum PAClassesViewControllerMode
     return visibleClasses;
 }
 
+- (NSArray *)visibleProtocols
+{
+    if(visibleProtocols == nil)
+    {
+        if([[searchBar text] length] == 0)
+            visibleProtocols = [PAAPI protocolList];
+        else
+            visibleProtocols = [[PAAPI protocolList] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"name contains[cd] %@", [searchBar text]]];
+    }
+    
+    return visibleProtocols;
+}
+
 - (IBAction)segmentedControlDidChangeValue:(id)sender
 {
     [self setVisibleClasses:nil];
+    [self setVisibleProtocols:nil];
     
     [tableView reloadData];
 }
@@ -140,6 +157,7 @@ enum PAClassesViewControllerMode
 - (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText
 {
     [self setVisibleClasses:nil];
+    [self setVisibleProtocols:nil];
     
     [tableView reloadData];
 }
@@ -153,48 +171,114 @@ enum PAClassesViewControllerMode
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
-    return 1;
+    return 2;
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
-    return [[self visibleClasses] count];
+    switch(section)
+    {
+        case 0:  return [[self visibleClasses]   count];
+        case 1:  return [[self visibleProtocols] count];
+        default: return 0;
+    }
+}
+
+- (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
+{
+    switch(section)
+    {
+        case 0:  return @"Classes";
+        case 1:  return @"Protocols";
+        default: return nil;
+    }
 }
 
 - (UITableViewCell *)tableView:(UITableView *)aTableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    static NSString *identifier = @"UITableViewCell";
-    
-    UITableViewCell *cell = [aTableView dequeueReusableCellWithIdentifier:identifier];
-    
-    if(cell == nil)
+    switch([indexPath section])
     {
-        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier];
-        
-        [cell setAccessoryType:UITableViewCellAccessoryDisclosureIndicator];
-        [[cell textLabel] setAdjustsFontSizeToFitWidth:YES];
-        [[cell textLabel] setMinimumFontSize:10.0];
-        [[cell textLabel] setFont:[UIFont boldSystemFontOfSize:14.0]];
+        case 0:
+        {
+            static NSString *identifier = @"Default UITableViewCell";
+            
+            UITableViewCell *cell = [aTableView dequeueReusableCellWithIdentifier:identifier];
+            
+            if(cell == nil)
+            {
+                cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier];
+                
+                [cell setAccessoryType:UITableViewCellAccessoryDisclosureIndicator];
+                [[cell textLabel] setAdjustsFontSizeToFitWidth:YES];
+                [[cell textLabel] setMinimumFontSize:10.0];
+                [[cell textLabel] setFont:[UIFont boldSystemFontOfSize:14.0]];
+            }
+            
+            PATree *class = [[self visibleClasses] objectAtIndex:[indexPath row]];
+            
+            [cell setIndentationLevel:[modeControl selectedSegmentIndex] == PAClassesViewControllerModeAlphabetical ? 0 : [class depth]];
+            [[cell textLabel] setText:[class name]];
+            
+            return cell;
+        }
+        case 1:
+        {
+            static NSString *identifier = @"Default UITableViewCell";
+            
+            UITableViewCell *cell = [aTableView dequeueReusableCellWithIdentifier:identifier];
+            
+            if(cell == nil)
+            {
+                cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier];
+                
+                [cell setAccessoryType:UITableViewCellAccessoryDisclosureIndicator];
+                [[cell textLabel] setAdjustsFontSizeToFitWidth:YES];
+                [[cell textLabel] setMinimumFontSize:10.0];
+                [[cell textLabel] setFont:[UIFont boldSystemFontOfSize:14.0]];
+            }
+            
+            PATree *protocol = [[self visibleProtocols] objectAtIndex:[indexPath row]];
+            
+            [cell setIndentationLevel:0];
+            [[cell textLabel] setText:[protocol name]];
+            
+            return cell;
+        }
+        default: return nil;
     }
-    
-    PATree *class = [[self visibleClasses] objectAtIndex:[indexPath row]];
-    
-    [cell setIndentationLevel:[modeControl selectedSegmentIndex] == PAClassesViewControllerModeAlphabetical ? 0 : [class depth]];
-    [[cell textLabel] setText:[class name]];
-    
-    return cell;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    NSString *className = [[[self visibleClasses] objectAtIndex:[indexPath row]] name];
-    
-    PAClassViewController *controller = [[PAClassViewController alloc] initWithNibName:@"PAClassViewController" bundle:nil];
-    
-    [controller setClassName:className];
-    [controller setTitle:className];
-    
-    [[self navigationController] pushViewController:controller animated:YES];
+    switch([indexPath section])
+    {
+        case 0:
+        {
+            NSString *className = [[[self visibleClasses] objectAtIndex:[indexPath row]] name];
+            
+            PAClassViewController *controller = [[PAClassViewController alloc] initWithNibName:@"PAClassViewController" bundle:nil];
+            
+            [controller setClassName:className];
+            [controller setTitle:className];
+            
+            [[self navigationController] pushViewController:controller animated:YES];
+            
+            break;
+        }
+        case 1:
+        {
+            NSString *protocolName = [[[self visibleProtocols] objectAtIndex:[indexPath row]] name];
+            
+            PAProtocolViewController *controller = [[PAProtocolViewController alloc] initWithNibName:@"PAProtocolViewController" bundle:nil];
+            
+            [controller setProtocolName:protocolName];
+            [controller setTitle:protocolName];
+            
+            [[self navigationController] pushViewController:controller animated:YES];
+            
+            break;
+        }
+    }
 }
 
 #pragma mark - Gesture recognizers

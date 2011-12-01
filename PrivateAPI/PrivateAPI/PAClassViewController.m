@@ -7,6 +7,7 @@
 //
 
 #import "PAClassViewController.h"
+#import "PAProtocolViewController.h"
 #import "PAPropertyTableViewCell.h"
 #import "PAMethodTableViewCell.h"
 #import "PAAPI.h"
@@ -34,18 +35,43 @@ enum PAClassViewControllerSection
 @property(nonatomic, copy)   NSArray               *methods;
 @property(nonatomic, copy)   NSArray               *ivars;
 
+#pragma mark - Keyboard notifications
+
+- (void)PA_keyboardWillChangeFrame:(NSNotification *)notification;
+
 @end
 
 @implementation PAClassViewController
 
-@synthesize searchBar, tableView, propertyCell, propertyCellNib, methodCell, className, classTree, superclasses, subclasses, protocols, properties, methods, ivars;
+@synthesize searchBar, tableView, tapRecognizer, propertyCell, propertyCellNib, methodCell, className, classTree, superclasses, subclasses, protocols, properties, methods, ivars;
 
-- (PATree *)classTree
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
 {
-    if(classTree == nil)
-        classTree = [PAAPI classTreeForClassName:className];
+    [super viewDidLoad];
     
-    return classTree;
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(PA_keyboardWillChangeFrame:) name:UIKeyboardWillChangeFrameNotification object:nil];
+    
+    [tableView addGestureRecognizer:tapRecognizer];
+}
+
+- (void)setClassName:(NSString *)aClassName
+{
+    if(![aClassName isEqualToString:className])
+    {
+        className = aClassName;
+        
+        [self setClassTree:[PAAPI classTreeForClassName:className]];
+        [self setSuperclasses:nil];
+        [self setSubclasses:nil];
+        [self setProtocols:nil];
+        [self setProperties:nil];
+        [self setMethods:nil];
+        [self setIvars:nil];
+        
+        [tableView reloadData];
+    }
 }
 
 - (NSArray *)superclasses
@@ -364,7 +390,61 @@ enum PAClassViewControllerSection
             
             break;
         }
+        case PAClassViewControllerSectionProtocols:
+        {
+            NSString *name = [[self protocols] objectAtIndex:[indexPath row]];
+            
+            PAProtocolViewController *controller = [[PAProtocolViewController alloc] initWithNibName:@"PAProtocolViewController" bundle:nil];
+            
+            [controller setProtocolName:name];
+            [controller setTitle:name];
+            
+            [[self navigationController] pushViewController:controller animated:YES];
+            
+            break;
+        }
     }
+}
+
+#pragma mark - Gesture recognizers
+
+- (IBAction)gestureRecognizerDidTapTableView:(UITapGestureRecognizer *)recognizer
+{
+    [searchBar resignFirstResponder];
+}
+
+#pragma mark - Keyboard notifications
+
+- (void)PA_keyboardWillChangeFrame:(NSNotification *)notification
+{
+    CGRect afterFrame = [[[notification userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
+    
+    afterFrame = [[self view] convertRect:afterFrame fromView:nil];
+    
+    CGFloat duration = [[[notification userInfo] objectForKey:UIKeyboardAnimationDurationUserInfoKey] floatValue];
+    
+    UIViewAnimationOptions options = 0;
+    
+    switch([[[notification userInfo] objectForKey:UIKeyboardAnimationCurveUserInfoKey] integerValue])
+    {
+        case UIViewAnimationCurveEaseInOut: options = UIViewAnimationOptionCurveEaseInOut; break;
+        case UIViewAnimationCurveEaseIn:    options = UIViewAnimationCurveEaseIn;          break;
+        case UIViewAnimationCurveEaseOut:   options = UIViewAnimationCurveEaseOut;         break;
+        case UIViewAnimationCurveLinear:    options = UIViewAnimationCurveLinear;          break;
+    }
+    
+    [UIView animateWithDuration:duration
+                          delay:0.0
+                        options:options
+                     animations:
+     ^{
+         CGRect tableFrame = [tableView frame];
+         
+         tableFrame.size.height = MIN(CGRectGetMinY(afterFrame), CGRectGetMaxY([[self view] bounds])) - CGRectGetMinY(tableFrame);
+         
+         [tableView setFrame:tableFrame];
+     }
+                     completion:nil];
 }
 
 @end

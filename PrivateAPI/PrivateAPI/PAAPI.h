@@ -22,7 +22,11 @@ typedef enum
 
 + (NSArray *)classList;
 + (NSArray *)classHierarchies;
-+ (PATree  *)classTreeForClassName:(NSString *)className;
+
++ (NSArray *)protocolList;
+
++ (PATree *)classTreeForClassName:(NSString *)className;
++ (PATree *)protocolTreeForProtocolName:(NSString *)protocolName;
 
 + (NSArray *)propertyList;
 + (NSArray *)methodList;
@@ -31,6 +35,9 @@ typedef enum
 + (NSArray *)propertiesForClassName:(NSString *)className;
 + (NSArray *)methodsForClassName:(NSString *)className;
 + (NSArray *)ivarsForClassName:(NSString *)className;
+
++ (NSArray *)propertiesForProtocolName:(NSString *)protocolName;
++ (NSArray *)methodsForProtocolName:(NSString *)protocolName;
 
 @end
 
@@ -75,14 +82,20 @@ typedef enum
 
 @interface PAMethod : NSObject
 
-@property(nonatomic, copy)   NSString *name;
-@property(nonatomic, copy)   NSString *returnType;
-@property(nonatomic, copy)   NSArray  *argumentTypes;
-@property(nonatomic, retain) PATree   *owner;
+@property(nonatomic, copy)                            NSString *name;
+@property(nonatomic, copy)                            NSString *returnType;
+@property(nonatomic, copy)                            NSArray  *argumentTypes;
+@property(nonatomic, assign, getter=isRequiredMethod) BOOL      requiredMethod;
+@property(nonatomic, assign, getter=isInstanceMethod) BOOL      instanceMethod;
+@property(nonatomic, retain)                          PATree   *owner;
 
 + (PAMethod *)methodWithRuntimeObject:(Method)object forOwner:(PATree *)owner;
 
++ (PAMethod *)methodWithDescription:(struct objc_method_description *)description forOwner:(PATree *)owner;
+
 - (id)initWithRuntimeObject:(Method)object forOwner:(PATree *)owner;
+
+- (id)initWithDescription:(struct objc_method_description *)description forOwner:(PATree *)owner;
 
 @end
 

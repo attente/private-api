@@ -27,6 +27,16 @@
       shouldUseLaunchSchemeArgsEnv = "YES"
       buildConfiguration = "Debug">
       <Testables>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "3D5A58041488113100ED7307"
+               BuildableName = "PrivateAPITest.octest"
+               BlueprintName = "PrivateAPITest"
+               ReferencedContainer = "container:PrivateAPI.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <MacroExpansion>
          <BuildableReference
