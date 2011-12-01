@@ -34,6 +34,12 @@ enum PAClassViewControllerSection
 @property(nonatomic, copy)   NSArray               *properties;
 @property(nonatomic, copy)   NSArray               *methods;
 @property(nonatomic, copy)   NSArray               *ivars;
+@property(nonatomic, copy)   NSArray               *visibleSuperclasses;
+@property(nonatomic, copy)   NSArray               *visibleSubclasses;
+@property(nonatomic, copy)   NSArray               *visibleProtocols;
+@property(nonatomic, copy)   NSArray               *visibleProperties;
+@property(nonatomic, copy)   NSArray               *visibleMethods;
+@property(nonatomic, copy)   NSArray               *visibleIvars;
 
 #pragma mark - Keyboard notifications
 
@@ -43,7 +49,7 @@ enum PAClassViewControllerSection
 
 @implementation PAClassViewController
 
-@synthesize searchBar, tableView, tapRecognizer, propertyCell, propertyCellNib, methodCell, className, classTree, superclasses, subclasses, protocols, properties, methods, ivars;
+@synthesize searchBar, tableView, tapRecognizer, propertyCell, propertyCellNib, methodCell, className, classTree, superclasses, subclasses, protocols, properties, methods, ivars, visibleSuperclasses, visibleSubclasses, visibleProtocols, visibleProperties, visibleMethods, visibleIvars;
 
 #pragma mark - View lifecycle
 
@@ -94,6 +100,13 @@ enum PAClassViewControllerSection
     return superclasses;
 }
 
+- (void)setSuperclasses:(NSArray *)someSuperclasses
+{
+    superclasses = [someSuperclasses copy];
+    
+    [self setVisibleSuperclasses:nil];
+}
+
 - (NSArray *)subclasses
 {
     if(subclasses == nil)
@@ -111,12 +124,26 @@ enum PAClassViewControllerSection
     return subclasses;
 }
 
+- (void)setSubclasses:(NSArray *)someSubclasses
+{
+    subclasses = [someSubclasses copy];
+    
+    [self setVisibleSubclasses:nil];
+}
+
 - (NSArray *)protocols
 {
     if(protocols == nil)
         protocols = [[PAAPI protocolNamesForClassName:className] sortedArrayUsingSelector:@selector(compare:)];
     
     return protocols;
+}
+
+- (void)setProtocols:(NSArray *)someProtocols
+{
+    protocols = [someProtocols copy];
+    
+    [self setVisibleProtocols:nil];
 }
 
 - (NSArray *)properties
@@ -131,6 +158,13 @@ enum PAClassViewControllerSection
     return properties;
 }
 
+- (void)setProperties:(NSArray *)someProperties
+{
+    properties = [someProperties copy];
+    
+    [self setVisibleProperties:nil];
+}
+
 - (NSArray *)methods
 {
     if(methods == nil)
@@ -141,6 +175,13 @@ enum PAClassViewControllerSection
                    }];
     
     return methods;
+}
+
+- (void)setMethods:(NSArray *)someMethods
+{
+    methods = [someMethods copy];
+    
+    [self setVisibleMethods:nil];
 }
 
 - (NSArray *)ivars
@@ -158,6 +199,110 @@ enum PAClassViewControllerSection
     return ivars;
 }
 
+- (void)setIvars:(NSArray *)someIvars
+{
+    ivars = [someIvars copy];
+    
+    [self setVisibleIvars:nil];
+}
+
+- (NSArray *)visibleSuperclasses
+{
+    if(visibleSuperclasses == nil)
+    {
+        if([[searchBar text] length] == 0)
+            visibleSuperclasses = [self superclasses];
+        else
+            visibleSuperclasses = [[self superclasses] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"self contains[cd] %@", [searchBar text]]];
+    }
+    
+    return visibleSuperclasses;
+}
+
+- (NSArray *)visibleSubclasses
+{
+    if(visibleSubclasses == nil)
+    {
+        if([[searchBar text] length] == 0)
+            visibleSubclasses = [self subclasses];
+        else
+            visibleSubclasses = [[self subclasses] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"self contains[cd] %@", [searchBar text]]];
+    }
+    
+    return visibleSubclasses;
+}
+
+- (NSArray *)visibleProtocols
+{
+    if(visibleProtocols == nil)
+    {
+        if([[searchBar text] length] == 0)
+            visibleProtocols = [self protocols];
+        else
+            visibleProtocols = [[self protocols] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"self contains[cd] %@", [searchBar text]]];
+    }
+    
+    return visibleProtocols;
+}
+
+- (NSArray *)visibleProperties
+{
+    if(visibleProperties == nil)
+    {
+        if([[searchBar text] length] == 0)
+            visibleProperties = [self properties];
+        else
+            visibleProperties = [[self properties] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"name contains[cd] %@", [searchBar text]]];
+    }
+    
+    return visibleProperties;
+}
+
+- (NSArray *)visibleMethods
+{
+    if(visibleMethods == nil)
+    {
+        if([[searchBar text] length] == 0)
+            visibleMethods = [self methods];
+        else
+            visibleMethods = [[self methods] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"name contains[cd] %@", [searchBar text]]];
+    }
+    
+    return visibleMethods;
+}
+
+- (NSArray *)visibleIvars
+{
+    if(visibleIvars == nil)
+    {
+        if([[searchBar text] length] == 0)
+            visibleIvars = [self ivars];
+        else
+            visibleIvars = [[self ivars] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"name contains[cd] %@", [searchBar text]]];
+    }
+    
+    return visibleIvars;
+}
+
+#pragma mark - UISearchBarDelegate conformance
+
+- (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText
+{
+    [self setVisibleSuperclasses:nil];
+    [self setVisibleSubclasses:nil];
+    [self setVisibleProtocols:nil];
+    [self setVisibleProperties:nil];
+    [self setVisibleMethods:nil];
+    [self setVisibleIvars:nil];
+    
+    [tableView reloadData];
+}
+
+- (void)searchBarSearchButtonClicked:(UISearchBar *)aSearchBar
+{
+    [aSearchBar resignFirstResponder];
+}
+
 #pragma mark - UITableViewDataSource and UITableViewDelegate conformance
 
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
@@ -169,12 +314,12 @@ enum PAClassViewControllerSection
 {
     switch(section)
     {
-        case PAClassViewControllerSectionSuperclasses: return [[self superclasses] count];
-        case PAClassViewControllerSectionSubclasses:   return [[self subclasses]   count];
-        case PAClassViewControllerSectionProtocols:    return [[self protocols]    count];
-        case PAClassViewControllerSectionProperties:   return [[self properties]   count];
-        case PAClassViewControllerSectionMethods:      return [[self methods]      count];
-        case PAClassViewControllerSectionIvars:        return [[self ivars]        count];
+        case PAClassViewControllerSectionSuperclasses: return [[self visibleSuperclasses] count];
+        case PAClassViewControllerSectionSubclasses:   return [[self visibleSubclasses]   count];
+        case PAClassViewControllerSectionProtocols:    return [[self visibleProtocols]    count];
+        case PAClassViewControllerSectionProperties:   return [[self visibleProperties]   count];
+        case PAClassViewControllerSectionMethods:      return [[self visibleMethods]      count];
+        case PAClassViewControllerSectionIvars:        return [[self visibleIvars]        count];
         default:                                       return 0;
     }
 }
@@ -210,7 +355,7 @@ enum PAClassViewControllerSection
                 [methodCell setContentViewInsets:UIEdgeInsetsMake(10.0, 10.0, 10.0, 10.0)];
             }
             
-            [methodCell setMethod:[[self methods] objectAtIndex:[indexPath row]]];
+            [methodCell setMethod:[[self visibleMethods] objectAtIndex:[indexPath row]]];
             
             return [methodCell sizeThatFits:CGSizeMake([aTableView bounds].size.width, CGFLOAT_MAX)].height;
         }
@@ -239,7 +384,7 @@ enum PAClassViewControllerSection
                 [[cell textLabel] setFont:[UIFont boldSystemFontOfSize:14.0]];
             }
             
-            [[cell textLabel] setText:[[self superclasses] objectAtIndex:[indexPath row]]];
+            [[cell textLabel] setText:[[self visibleSuperclasses] objectAtIndex:[indexPath row]]];
             
             return cell;
         }
@@ -259,7 +404,7 @@ enum PAClassViewControllerSection
                 [[cell textLabel] setFont:[UIFont boldSystemFontOfSize:14.0]];
             }
             
-            [[cell textLabel] setText:[[self subclasses] objectAtIndex:[indexPath row]]];
+            [[cell textLabel] setText:[[self visibleSubclasses] objectAtIndex:[indexPath row]]];
             
             return cell;
         }
@@ -279,7 +424,7 @@ enum PAClassViewControllerSection
                 [[cell textLabel] setFont:[UIFont boldSystemFontOfSize:14.0]];
             }
             
-            [[cell textLabel] setText:[[self protocols] objectAtIndex:[indexPath row]]];
+            [[cell textLabel] setText:[[self visibleProtocols] objectAtIndex:[indexPath row]]];
             
             return cell;
         }
@@ -300,7 +445,7 @@ enum PAClassViewControllerSection
                 [self setPropertyCell:nil];
             }
             
-            PAProperty *property = [[self properties] objectAtIndex:[indexPath row]];
+            PAProperty *property = [[self visibleProperties] objectAtIndex:[indexPath row]];
             
             NSString *getter      = [property getter] ? : [property name];
             NSString *setter      = [property setter] ? : [property isReadonly] ? nil : [NSString stringWithFormat:@"set%@:", [[property name] capitalizedString]];
@@ -341,7 +486,7 @@ enum PAClassViewControllerSection
                 [cell setContentViewInsets:UIEdgeInsetsMake(10.0, 10.0, 10.0, 10.0)];
             }
             
-            [cell setMethod:[[self methods] objectAtIndex:[indexPath row]]];
+            [cell setMethod:[[self visibleMethods] objectAtIndex:[indexPath row]]];
             
             return cell;
         }
@@ -359,7 +504,7 @@ enum PAClassViewControllerSection
                 [[cell detailTextLabel] setFont:[UIFont systemFontOfSize:14.0]];
             }
             
-            PAIvar *ivar = [[self ivars] objectAtIndex:[indexPath row]];
+            PAIvar *ivar = [[self visibleIvars] objectAtIndex:[indexPath row]];
             
             [[cell textLabel]       setText:[ivar name]];
             [[cell detailTextLabel] setText:[ivar type]];
@@ -378,7 +523,7 @@ enum PAClassViewControllerSection
         case PAClassViewControllerSectionSuperclasses:
         case PAClassViewControllerSectionSubclasses:
         {
-            NSArray  *names = [indexPath section] == PAClassViewControllerSectionSuperclasses ? [self superclasses] : [self subclasses];
+            NSArray  *names = [indexPath section] == PAClassViewControllerSectionSuperclasses ? [self visibleSuperclasses] : [self visibleSubclasses];
             NSString *name  = [names objectAtIndex:[indexPath row]];
             
             PAClassViewController *controller = [[PAClassViewController alloc] initWithNibName:@"PAClassViewController" bundle:nil];
@@ -392,7 +537,7 @@ enum PAClassViewControllerSection
         }
         case PAClassViewControllerSectionProtocols:
         {
-            NSString *name = [[self protocols] objectAtIndex:[indexPath row]];
+            NSString *name = [[self visibleProtocols] objectAtIndex:[indexPath row]];
             
             PAProtocolViewController *controller = [[PAProtocolViewController alloc] initWithNibName:@"PAProtocolViewController" bundle:nil];
             

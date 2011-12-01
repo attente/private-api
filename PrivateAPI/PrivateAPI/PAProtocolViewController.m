@@ -29,12 +29,31 @@ enum PAProtocolViewControllerSection
 @property(nonatomic, copy)   NSArray               *extensions;
 @property(nonatomic, copy)   NSArray               *properties;
 @property(nonatomic, copy)   NSArray               *methods;
+@property(nonatomic, copy)   NSArray               *visibleProtocols;
+@property(nonatomic, copy)   NSArray               *visibleExtensions;
+@property(nonatomic, copy)   NSArray               *visibleProperties;
+@property(nonatomic, copy)   NSArray               *visibleMethods;
+
+#pragma mark - Keyboard notifications
+
+- (void)PA_keyboardWillChangeFrame:(NSNotification *)notification;
 
 @end
 
 @implementation PAProtocolViewController
 
-@synthesize searchBar, tableView, propertyCell, propertyCellNib, methodCell, protocolName, protocolTree, protocols, extensions, properties, methods;
+@synthesize searchBar, tableView, tapRecognizer, propertyCell, propertyCellNib, methodCell, protocolName, protocolTree, protocols, extensions, properties, methods, visibleProtocols, visibleExtensions, visibleProperties, visibleMethods;
+
+#pragma mark - View lifecycle
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(PA_keyboardWillChangeFrame:) name:UIKeyboardWillChangeFrameNotification object:nil];
+    
+    [tableView addGestureRecognizer:tapRecognizer];
+}
 
 - (void)setProtocolName:(NSString *)aProtocolName
 {
@@ -60,12 +79,26 @@ enum PAProtocolViewControllerSection
     return protocols;
 }
 
+- (void)setProtocols:(NSArray *)someProtocols
+{
+    protocols = [someProtocols copy];
+    
+    [self setVisibleProtocols:nil];
+}
+
 - (NSArray *)extensions
 {
     if(extensions == nil)
         extensions = [[[self protocolTree] children] valueForKey:@"name"];
     
     return extensions;
+}
+
+- (void)setExtensions:(NSArray *)someExtensions
+{
+    extensions = [someExtensions copy];
+    
+    [self setVisibleExtensions:nil];
 }
 
 - (NSArray *)properties
@@ -76,6 +109,13 @@ enum PAProtocolViewControllerSection
     return properties;
 }
 
+- (void)setProperties:(NSArray *)someProperties
+{
+    properties = [someProperties copy];
+    
+    [self setVisibleProperties:nil];
+}
+
 - (NSArray *)methods
 {
     if(methods == nil)
@@ -84,7 +124,81 @@ enum PAProtocolViewControllerSection
     return methods;
 }
 
+- (void)setMethods:(NSArray *)someMethods
+{
+    methods = [someMethods copy];
+    
+    [self setVisibleMethods:nil];
+}
+
+- (NSArray *)visibleProtocols
+{
+    if(visibleProtocols == nil)
+    {
+        if([[searchBar text] length] == 0)
+            visibleProtocols = [self protocols];
+        else
+            visibleProtocols = [[self protocols] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"self contains[cd] %@", [searchBar text]]];
+    }
+    
+    return visibleProtocols;
+}
+
+- (NSArray *)visibleExtensions
+{
+    if(visibleExtensions == nil)
+    {
+        if([[searchBar text] length] == 0)
+            visibleExtensions = [self extensions];
+        else
+            visibleExtensions = [[self extensions] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"self contains[cd] %@", [searchBar text]]];
+    }
+    
+    return visibleExtensions;
+}
+
+- (NSArray *)visibleProperties
+{
+    if(visibleProperties == nil)
+    {
+        if([[searchBar text] length] == 0)
+            visibleProperties = [self properties];
+        else
+            visibleProperties = [[self properties] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"name contains[cd] %@", [searchBar text]]];
+    }
+    
+    return visibleProperties;
+}
+
+- (NSArray *)visibleMethods
+{
+    if(visibleMethods == nil)
+    {
+        if([[searchBar text] length] == 0)
+            visibleMethods = [self methods];
+        else
+            visibleMethods = [[self methods] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"name contains[cd] %@", [searchBar text]]];
+    }
+    
+    return visibleMethods;
+}
+
 #pragma mark - UISearchBarDelegate conformance
+
+- (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText
+{
+    [self setVisibleProtocols:nil];
+    [self setVisibleExtensions:nil];
+    [self setVisibleProperties:nil];
+    [self setVisibleMethods:nil];
+    
+    [tableView reloadData];
+}
+
+- (void)searchBarSearchButtonClicked:(UISearchBar *)aSearchBar
+{
+    [aSearchBar resignFirstResponder];
+}
 
 #pragma mark - UITableViewDataSource and UITableViewDelegate conformance
 
@@ -97,10 +211,10 @@ enum PAProtocolViewControllerSection
 {
     switch(section)
     {
-        case PAProtocolViewControllerSectionProtocols:  return [[self protocols]  count];
-        case PAProtocolViewControllerSectionExtensions: return [[self extensions] count];
-        case PAProtocolViewControllerSectionProperties: return [[self properties] count];
-        case PAProtocolViewControllerSectionMethods:    return [[self methods]    count];
+        case PAProtocolViewControllerSectionProtocols:  return [[self visibleProtocols]  count];
+        case PAProtocolViewControllerSectionExtensions: return [[self visibleExtensions] count];
+        case PAProtocolViewControllerSectionProperties: return [[self visibleProperties] count];
+        case PAProtocolViewControllerSectionMethods:    return [[self visibleMethods]    count];
         default:                                        return 0;
     }
 }
@@ -133,7 +247,7 @@ enum PAProtocolViewControllerSection
                 [methodCell setContentViewInsets:UIEdgeInsetsMake(10.0, 10.0, 10.0, 10.0)];
             }
             
-            [methodCell setMethod:[[self methods] objectAtIndex:[indexPath row]]];
+            [methodCell setMethod:[[self visibleMethods] objectAtIndex:[indexPath row]]];
             
             return [methodCell sizeThatFits:CGSizeMake([aTableView bounds].size.width, CGFLOAT_MAX)].height;
         }
@@ -161,7 +275,7 @@ enum PAProtocolViewControllerSection
                 [[cell textLabel] setFont:[UIFont boldSystemFontOfSize:14.0]];
             }
             
-            [[cell textLabel] setText:[[self protocols] objectAtIndex:[indexPath row]]];
+            [[cell textLabel] setText:[[self visibleProtocols] objectAtIndex:[indexPath row]]];
             
             return cell;
         }
@@ -181,7 +295,7 @@ enum PAProtocolViewControllerSection
                 [[cell textLabel] setFont:[UIFont boldSystemFontOfSize:14.0]];
             }
             
-            [[cell textLabel] setText:[[self extensions] objectAtIndex:[indexPath row]]];
+            [[cell textLabel] setText:[[self visibleExtensions] objectAtIndex:[indexPath row]]];
             
             return cell;
         }
@@ -202,7 +316,7 @@ enum PAProtocolViewControllerSection
                 [self setPropertyCell:nil];
             }
             
-            PAProperty *property = [[self properties] objectAtIndex:[indexPath row]];
+            PAProperty *property = [[self visibleProperties] objectAtIndex:[indexPath row]];
             
             NSString *getter      = [property getter] ? : [property name];
             NSString *setter      = [property setter] ? : [property isReadonly] ? nil : [NSString stringWithFormat:@"set%@:", [[property name] capitalizedString]];
@@ -243,7 +357,7 @@ enum PAProtocolViewControllerSection
                 [cell setContentViewInsets:UIEdgeInsetsMake(10.0, 10.0, 10.0, 10.0)];
             }
             
-            [cell setMethod:[[self methods] objectAtIndex:[indexPath row]]];
+            [cell setMethod:[[self visibleMethods] objectAtIndex:[indexPath row]]];
             
             return cell;
         }
@@ -258,7 +372,7 @@ enum PAProtocolViewControllerSection
         case PAProtocolViewControllerSectionProtocols:
         case PAProtocolViewControllerSectionExtensions:
         {
-            NSArray  *names = [indexPath section] == PAProtocolViewControllerSectionProtocols ? [self protocols] : [self extensions];
+            NSArray  *names = [indexPath section] == PAProtocolViewControllerSectionProtocols ? [self visibleProtocols] : [self visibleExtensions];
             NSString *name  = [names objectAtIndex:[indexPath row]];
             
             PAProtocolViewController *controller = [[PAProtocolViewController alloc] initWithNibName:@"PAProtocolViewController" bundle:nil];
@@ -271,6 +385,47 @@ enum PAProtocolViewControllerSection
             break;
         }
     }
+}
+
+#pragma mark - Gesture recognizers
+
+- (IBAction)gestureRecognizerDidTapTableView:(UITapGestureRecognizer *)recognizer
+{
+    [searchBar resignFirstResponder];
+}
+
+#pragma mark - Keyboard notifications
+
+- (void)PA_keyboardWillChangeFrame:(NSNotification *)notification
+{
+    CGRect afterFrame = [[[notification userInfo] objectForKey:UIKeyboardFrameEndUserInfoKey] CGRectValue];
+    
+    afterFrame = [[self view] convertRect:afterFrame fromView:nil];
+    
+    CGFloat duration = [[[notification userInfo] objectForKey:UIKeyboardAnimationDurationUserInfoKey] floatValue];
+    
+    UIViewAnimationOptions options = 0;
+    
+    switch([[[notification userInfo] objectForKey:UIKeyboardAnimationCurveUserInfoKey] integerValue])
+    {
+        case UIViewAnimationCurveEaseInOut: options = UIViewAnimationOptionCurveEaseInOut; break;
+        case UIViewAnimationCurveEaseIn:    options = UIViewAnimationCurveEaseIn;          break;
+        case UIViewAnimationCurveEaseOut:   options = UIViewAnimationCurveEaseOut;         break;
+        case UIViewAnimationCurveLinear:    options = UIViewAnimationCurveLinear;          break;
+    }
+    
+    [UIView animateWithDuration:duration
+                          delay:0.0
+                        options:options
+                     animations:
+     ^{
+         CGRect tableFrame = [tableView frame];
+         
+         tableFrame.size.height = MIN(CGRectGetMinY(afterFrame), CGRectGetMaxY([[self view] bounds])) - CGRectGetMinY(tableFrame);
+         
+         [tableView setFrame:tableFrame];
+     }
+                     completion:nil];
 }
 
 @end

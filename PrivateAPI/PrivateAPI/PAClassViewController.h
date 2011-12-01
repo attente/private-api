@@ -19,4 +19,8 @@
 
 @property(nonatomic, copy) NSString *className;
 
+#pragma mark - Gesture recognizers
+
+- (IBAction)gestureRecognizerDidTapTableView:(UITapGestureRecognizer *)recognizer;
+
 @end

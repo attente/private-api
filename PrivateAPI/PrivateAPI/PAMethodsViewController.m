@@ -206,6 +206,8 @@
                 
                 cell = [self propertyCell];
                 [self setPropertyCell:nil];
+                
+                [cell setAccessoryType:UITableViewCellAccessoryDisclosureIndicator];
             }
             
             PAProperty *property = [[self visibleProperties] objectAtIndex:[indexPath row]];
@@ -246,6 +248,7 @@
             {
                 cell = [[PAMethodTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier];
                 
+                [cell setAccessoryType:UITableViewCellAccessoryDisclosureIndicator];
                 [cell setContentViewInsets:UIEdgeInsetsMake(10.0, 10.0, 10.0, 10.0)];
             }
             

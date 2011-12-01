@@ -14,8 +14,13 @@
 
 @property(nonatomic, retain) IBOutlet UISearchBar             *searchBar;
 @property(nonatomic, retain) IBOutlet UITableView             *tableView;
+@property(nonatomic, retain) IBOutlet UITapGestureRecognizer  *tapRecognizer;
 @property(nonatomic, retain) IBOutlet PAPropertyTableViewCell *propertyCell;
 
 @property(nonatomic, copy) NSString *protocolName;
+
+#pragma mark - Gesture recognizers
+
+- (IBAction)gestureRecognizerDidTapTableView:(UITapGestureRecognizer *)recognizer;
 
 @end
