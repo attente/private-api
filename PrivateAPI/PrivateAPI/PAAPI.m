@@ -111,10 +111,31 @@ static NSArray      *methodList;
             
             free(runtimeProperties);
             
-            Method *runtimeMethods = class_copyMethodList(classes[index], &count);
+            Method *runtimeMethods = class_copyMethodList(objc_getMetaClass([className UTF8String]), &count);
             
             for(int subindex = 0; subindex < count; subindex++)
-                [methods addObject:[PAMethod methodWithRuntimeObject:runtimeMethods[subindex] forOwner:classTree]];
+            {
+                PAMethod *method = [PAMethod methodWithRuntimeObject:runtimeMethods[subindex] forOwner:classTree];
+                
+                [method setRequiredMethod:YES];
+                [method setInstanceMethod:NO];
+                
+                [methods addObject:method];
+            }
+            
+            free(runtimeMethods);
+            
+            runtimeMethods = class_copyMethodList(classes[index], &count);
+            
+            for(int subindex = 0; subindex < count; subindex++)
+            {
+                PAMethod *method = [PAMethod methodWithRuntimeObject:runtimeMethods[subindex] forOwner:classTree];
+                
+                [method setRequiredMethod:YES];
+                [method setInstanceMethod:YES];
+                
+                [methods addObject:method];
+            }
             
             free(runtimeMethods);
         }
@@ -286,12 +307,33 @@ static NSArray      *methodList;
 {
     unsigned int count;
     
-    Method *runtimeObjects = class_copyMethodList(NSClassFromString(className), &count);
+    NSMutableArray *methods = [NSMutableArray array];
     
-    NSMutableArray *methods = [NSMutableArray arrayWithCapacity:count];
+    Method *runtimeObjects = class_copyMethodList(objc_getMetaClass([className UTF8String]), &count);
     
     for(int index = 0; index < count; index++)
-        [methods addObject:[PAMethod methodWithRuntimeObject:runtimeObjects[index] forOwner:[PAAPI classTreeForClassName:className]]];
+    {
+        PAMethod *method = [PAMethod methodWithRuntimeObject:runtimeObjects[index] forOwner:[PAAPI classTreeForClassName:className]];
+        
+        [method setRequiredMethod:YES];
+        [method setInstanceMethod:NO];
+        
+        [methods addObject:method];
+    }
+    
+    free(runtimeObjects);
+    
+    runtimeObjects = class_copyMethodList(NSClassFromString(className), &count);
+    
+    for(int index = 0; index < count; index++)
+    {
+        PAMethod *method = [PAMethod methodWithRuntimeObject:runtimeObjects[index] forOwner:[PAAPI classTreeForClassName:className]];
+        
+        [method setRequiredMethod:YES];
+        [method setInstanceMethod:YES];
+        
+        [methods addObject:method];
+    }
     
     free(runtimeObjects);
     
@@ -559,20 +601,24 @@ static NSArray      *methodList;
         
         free(type);
         
-        unsigned int count = method_getNumberOfArguments(object) - 2;
+        int count = method_getNumberOfArguments(object) - 2;
         
-        NSMutableArray *types = [NSMutableArray arrayWithCapacity:count];
-        
-        for(int index = 0; index < count; index++)
+        if(count > 0)
         {
-            type = method_copyArgumentType(object, 2 + index);
+            NSMutableArray *types = [NSMutableArray arrayWithCapacity:count];
             
-            [types addObject:[PAAPI PA_typeForEncoding:[NSString stringWithUTF8String:type]]];
+            for(int index = 0; index < count; index++)
+            {
+                type = method_copyArgumentType(object, 2 + index);
+                
+                [types addObject:[PAAPI PA_typeForEncoding:[NSString stringWithUTF8String:type]]];
+                
+                free(type);
+            }
             
-            free(type);
+            [self setArgumentTypes:types];
         }
         
-        [self setArgumentTypes:types];
         [self setOwner:anOwner];
     }
     

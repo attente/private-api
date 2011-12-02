@@ -184,6 +184,16 @@ enum PAClassesViewControllerMode
     }
 }
 
+- (CGFloat)tableView:(UITableView *)aTableView heightForHeaderInSection:(NSInteger)section
+{
+    switch(section)
+    {
+        case 0:  return [[self visibleClasses]   count] > 0 ? [aTableView sectionHeaderHeight] : 0.0;
+        case 1:  return [[self visibleProtocols] count] > 0 ? [aTableView sectionHeaderHeight] : 0.0;
+        default: return 0.0;
+    }
+}
+
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
 {
     switch(section)

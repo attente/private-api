@@ -27,11 +27,23 @@
         
         NSMutableArray *labelArray = [NSMutableArray arrayWithCapacity:MAX(2, 1 + [[method argumentTypes] count])];
         
-        UILabel *label = [[UILabel alloc] init];
+        UILabel *label;
+        
+        if(![method isRequiredMethod])
+        {
+            label = [[UILabel alloc] init];
+            [label setBackgroundColor:[UIColor clearColor]];
+            [label setFont:[UIFont italicSystemFontOfSize:14.0]];
+            [label setTextColor:[UIColor blackColor]];
+            [label setText:@"optional"];
+            [labelArray addObject:label];
+        }
+        
+        label = [[UILabel alloc] init];
         [label setBackgroundColor:[UIColor clearColor]];
         [label setFont:[UIFont systemFontOfSize:14.0]];
         [label setTextColor:[UIColor blackColor]];
-        [label setText:[NSString stringWithFormat:@"(%@)", [method returnType]]];
+        [label setText:[NSString stringWithFormat:@"%@ (%@)", [method isInstanceMethod] ? @"-" : @"+", [method returnType]]];
         [labelArray addObject:label];
         
         if([[method argumentTypes] count] == 0)
@@ -109,6 +121,12 @@
         }
         
         origin.x += labelSize.width;
+        
+        if(![method isRequiredMethod] && label == [labels objectAtIndex:0])
+        {
+            origin.x = 0.0;
+            origin.y += labelSize.height;
+        }
     }
     
     size.width += contentViewInsets.left + contentViewInsets.right;
@@ -126,7 +144,7 @@
     for(UILabel *label in labels)
     {
         CGSize labelSize = [label sizeThatFits:bounds.size];
-        
+            
         if(origin.x > bounds.origin.x && origin.x + labelSize.width > CGRectGetMaxX(bounds))
         {
             origin.x = bounds.origin.x;
@@ -136,6 +154,12 @@
         [label setFrame:(CGRect){ .origin = origin, .size = labelSize }];
         
         origin.x += labelSize.width;
+        
+        if(![method isRequiredMethod] && label == [labels objectAtIndex:0])
+        {
+            origin.x = bounds.origin.x;
+            origin.y += labelSize.height;
+        }
     }
 }
 

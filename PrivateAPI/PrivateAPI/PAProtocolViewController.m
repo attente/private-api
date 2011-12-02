@@ -219,6 +219,18 @@ enum PAProtocolViewControllerSection
     }
 }
 
+- (CGFloat)tableView:(UITableView *)aTableView heightForHeaderInSection:(NSInteger)section
+{
+    switch(section)
+    {
+        case PAProtocolViewControllerSectionProtocols:  return [[self visibleProtocols]  count] > 0 ? [aTableView sectionHeaderHeight] : 0.0;
+        case PAProtocolViewControllerSectionExtensions: return [[self visibleExtensions] count] > 0 ? [aTableView sectionHeaderHeight] : 0.0;
+        case PAProtocolViewControllerSectionProperties: return [[self visibleProperties] count] > 0 ? [aTableView sectionHeaderHeight] : 0.0;
+        case PAProtocolViewControllerSectionMethods:    return [[self visibleMethods]    count] > 0 ? [aTableView sectionHeaderHeight] : 0.0;
+        default:                                        return 0.0;
+    }
+}
+
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
 {
     switch(section)

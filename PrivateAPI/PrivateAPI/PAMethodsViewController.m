@@ -19,8 +19,10 @@
 @property(nonatomic, retain) PAMethodTableViewCell *methodCell;
 @property(nonatomic, copy)   NSArray               *properties;
 @property(nonatomic, copy)   NSArray               *methods;
+@property(nonatomic, copy)   NSArray               *methodHeights;
 @property(nonatomic, copy)   NSArray               *visibleProperties;
 @property(nonatomic, copy)   NSArray               *visibleMethods;
+@property(nonatomic, copy)   NSArray               *visibleMethodHeights;
 
 #pragma mark - Keyboard notifications
 
@@ -30,7 +32,7 @@
 
 @implementation PAMethodsViewController
 
-@synthesize searchBar, tableView, tapRecognizer, propertyCell, propertyCellNib, methodCell, properties, methods, visibleProperties, visibleMethods;
+@synthesize searchBar, tableView, tapRecognizer, propertyCell, propertyCellNib, methodCell, properties, methods, methodHeights, visibleProperties, visibleMethods, visibleMethodHeights;
 
 - (void)didReceiveMemoryWarning
 {
@@ -92,9 +94,36 @@
 - (NSArray *)methods
 {
     if(methods == nil)
+    {
         methods = [PAAPI methodList];
+        
+        NSMutableArray *heights = [NSMutableArray arrayWithCapacity:[methods count]];
+        
+        if(methodCell == nil)
+        {
+            methodCell = [[PAMethodTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
+            
+            [methodCell setContentViewInsets:UIEdgeInsetsMake(10.0, 10.0, 10.0, 10.0)];
+        }
+        
+        for(PAMethod *method in methods)
+        {
+            [methodCell setMethod:method];
+            
+            [heights addObject:[NSNumber numberWithFloat:[methodCell sizeThatFits:CGSizeMake([tableView bounds].size.width, CGFLOAT_MAX)].height]];
+        }
+        
+        methodHeights = heights;
+    }
     
     return methods;
+}
+
+- (NSArray *)methodHeights
+{
+    [self methods];
+    
+    return methodHeights;
 }
 
 - (NSArray *)visibleProperties
@@ -115,17 +144,43 @@
     if(visibleMethods == nil)
     {
         if([[searchBar text] length] == 0)
-            visibleMethods = [self methods];
+        {
+            visibleMethods       = [self methods];
+            visibleMethodHeights = [self methodHeights];
+        }
         else
-            visibleMethods = [[self methods] filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"name contains[cd] %@", [searchBar text]]];
+        {
+            NSIndexSet *indices = [[self methods] indexesOfObjectsPassingTest:
+                                   ^ BOOL (id obj, NSUInteger idx, BOOL *stop)
+                                   {
+                                       return [[obj name] rangeOfString:[searchBar text] options:NSCaseInsensitiveSearch | NSDiacriticInsensitiveSearch].location != NSNotFound;
+                                   }];
+            
+            visibleMethods       = [[self methods]       objectsAtIndexes:indices];
+            visibleMethodHeights = [[self methodHeights] objectsAtIndexes:indices];
+        }
     }
     
     return visibleMethods;
 }
 
+- (void)setVisibleMethods:(NSArray *)someVisibleMethods
+{
+    visibleMethods = [someVisibleMethods copy];
+    
+    [self setVisibleMethodHeights:nil];
+}
+
+- (NSArray *)visibleMethodHeights
+{
+    [self visibleMethods];
+    
+    return visibleMethodHeights;
+}
+
 #pragma mark - UISearchBarDelegate conformance
 
-- (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)searchText
+- (void)searchBar:(UISearchBar *)searchBar textDidChange:(NSString *)someSearchText
 {
     [self setVisibleProperties:nil];
     [self setVisibleMethods:nil];
@@ -155,6 +210,16 @@
     }
 }
 
+- (CGFloat)tableView:(UITableView *)aTableView heightForHeaderInSection:(NSInteger)section
+{
+    switch(section)
+    {
+        case 0:  return [[self visibleProperties] count] > 0 ? [aTableView sectionHeaderHeight] : 0.0;
+        case 1:  return [[self visibleMethods]    count] > 0 ? [aTableView sectionHeaderHeight] : 0.0;
+        default: return 0.0;
+    }
+}
+
 - (NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
 {
     switch(section)
@@ -169,20 +234,8 @@
 {
     switch([indexPath section])
     {
-        case 0: return 83.0;
-        case 1:
-        {
-            if(methodCell == nil)
-            {
-                methodCell = [[PAMethodTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
-                
-                [methodCell setContentViewInsets:UIEdgeInsetsMake(10.0, 10.0, 10.0, 10.0)];
-            }
-            
-            [methodCell setMethod:[[self visibleMethods] objectAtIndex:[indexPath row]]];
-            
-            return [methodCell sizeThatFits:CGSizeMake([aTableView bounds].size.width, CGFLOAT_MAX)].height;
-        }
+        case 0:  return 83.0;
+        case 1:  return [[[self visibleMethodHeights] objectAtIndex:[indexPath row]] floatValue];
         default: return 0.0;
     }
 }
@@ -248,7 +301,6 @@
             {
                 cell = [[PAMethodTableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:identifier];
                 
-                [cell setAccessoryType:UITableViewCellAccessoryDisclosureIndicator];
                 [cell setContentViewInsets:UIEdgeInsetsMake(10.0, 10.0, 10.0, 10.0)];
             }
             

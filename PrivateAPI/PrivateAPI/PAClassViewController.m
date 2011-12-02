@@ -171,7 +171,10 @@ enum PAClassViewControllerSection
         methods = [[PAAPI methodsForClassName:className] sortedArrayUsingComparator:
                    ^NSComparisonResult(id obj1, id obj2)
                    {
-                       return [[obj1 name] compare:[obj2 name]];
+                       if([obj1 isInstanceMethod] != [obj2 isInstanceMethod])
+                           return [obj1 isInstanceMethod] ? NSOrderedDescending : NSOrderedAscending;
+                       else
+                           return [[obj1 name] compare:[obj2 name]];
                    }];
     
     return methods;
@@ -321,6 +324,20 @@ enum PAClassViewControllerSection
         case PAClassViewControllerSectionMethods:      return [[self visibleMethods]      count];
         case PAClassViewControllerSectionIvars:        return [[self visibleIvars]        count];
         default:                                       return 0;
+    }
+}
+
+- (CGFloat)tableView:(UITableView *)aTableView heightForHeaderInSection:(NSInteger)section
+{
+    switch(section)
+    {
+        case PAClassViewControllerSectionSuperclasses: return [[self visibleSuperclasses] count] > 0 ? [aTableView sectionHeaderHeight] : 0.0;
+        case PAClassViewControllerSectionSubclasses:   return [[self visibleSubclasses]   count] > 0 ? [aTableView sectionHeaderHeight] : 0.0;
+        case PAClassViewControllerSectionProtocols:    return [[self visibleProtocols]    count] > 0 ? [aTableView sectionHeaderHeight] : 0.0;
+        case PAClassViewControllerSectionProperties:   return [[self visibleProperties]   count] > 0 ? [aTableView sectionHeaderHeight] : 0.0;
+        case PAClassViewControllerSectionMethods:      return [[self visibleMethods]      count] > 0 ? [aTableView sectionHeaderHeight] : 0.0;
+        case PAClassViewControllerSectionIvars:        return [[self visibleIvars]        count] > 0 ? [aTableView sectionHeaderHeight] : 0.0;
+        default:                                       return 0.0;
     }
 }
 
