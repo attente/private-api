@@ -41,6 +41,11 @@ static NSArray      *methodList;
                                 @"_NSZombie_",
                                 @"Object",
                                 @"NSMessageBuilder",
+                                @"__NSMessageBuilder",
+                                @"__NSAtom",
+                                @"UIKeyboardCandidateUtilities",
+                                @"WebMIMETypeRegistry",
+                                @"__ARCLite__",
                                 nil];
         
         int classCount = objc_getClassList(NULL, 0);
